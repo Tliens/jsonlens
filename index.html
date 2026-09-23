@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON Lens — Online JSON Formatter, Validator &amp; Tree Viewer | Unescape, JSONPath</title>
+<meta name="description" content="Free online JSON formatter & validator for developers. Format, minify, auto-repair, unescape JSON strings, collapse/expand tree view, error position locator and JSONPath queries — 100% in your browser, nothing uploaded.">
+<link rel="canonical" href="https://tliens.github.io/jsonlens/">
+<link rel="alternate" hreflang="en" href="https://tliens.github.io/jsonlens/?lang=en">
+<link rel="alternate" hreflang="zh" href="https://tliens.github.io/jsonlens/?lang=zh">
+<link rel="alternate" hreflang="x-default" href="https://tliens.github.io/jsonlens/">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="JSON Lens">
+<meta property="og:title" content="JSON Lens — Online JSON Formatter, Validator & Tree Viewer">
+<meta property="og:description" content="Format, repair, unescape and explore JSON in a collapsible tree. Error locator, JSONPath queries. 100% local — your data never leaves the browser.">
+<meta property="og:url" content="https://tliens.github.io/jsonlens/">
+<meta property="og:image" content="https://tliens.github.io/jsonlens/og-image.png">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="JSON Lens — Online JSON Formatter, Validator & Tree Viewer">
+<meta name="twitter:description" content="Format, repair, unescape and explore JSON in a collapsible tree. JSONPath queries, error locator. 100% local.">
+<meta name="twitter:image" content="https://tliens.github.io/jsonlens/og-image.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"WebApplication","name":"JSON Lens","url":"https://tliens.github.io/jsonlens/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"inLanguage":["en","zh-CN"],"description":"Free online JSON formatter, validator and tree viewer with auto-repair, escape/unescape, JSONPath queries and precise error locations. Runs entirely in the browser."},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is my JSON data uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. All parsing, formatting, repair and querying happens locally in your browser with JavaScript. Your input never leaves your device — there is no backend at all."}},
+  {"@type":"Question","name":"How do I convert an escaped JSON string back to JSON?","acceptedAnswer":{"@type":"Answer","text":"Paste the escaped string and JSON Lens auto-detects it. You can also press the Unescape button. It strips wrapping quotes, resolves \\n, \\\" and \\\\ sequences, and handles multi-layer escaping, URL-encoded and Base64-encoded JSON."}},
+  {"@type":"Question","name":"What kinds of broken JSON can auto-repair fix?","acceptedAnswer":{"@type":"Answer","text":"Single quotes, trailing commas, unquoted keys, // and /* */ comments, Python literals (True/False/None), NaN/Infinity, smart quotes copied from rich text, and JSON Lines (one object per line, wrapped into an array)."}},
+  {"@type":"Question","name":"How can I query a value deep inside a large JSON?","acceptedAnswer":{"@type":"Answer","text":"Use the JSONPath bar above the tree. Examples: $.store.book[0].title, $..author, $.items[?(@.price<10)]. Matching nodes are highlighted and results can be copied as JSON."}},
+  {"@type":"Question","name":"Is there a size limit?","acceptedAnswer":{"@type":"Answer","text":"There is no hard limit. Inputs up to a few MB parse instantly; above 2 MB live parsing switches to a manual Parse button to keep the page responsive, and the tree lazily renders nodes only when you expand them."}}
+ ]}
+]}
+</script>
+<style>
+:root{
+  --bg:#f5f6f8; --panel:#ffffff; --panel2:#fafbfc; --border:#e2e6eb; --border2:#eef1f4;
+  --text:#1c2230; --muted:#66707f; --faint:#98a1af;
+  --accent:#4f46e5; --accent-soft:#eef0ff; --accent-text:#4338ca;
+  --key:#7c3aed; --str:#0f8a4b; --num:#1d63d8; --bool:#d97706; --null:#94a3b8; --punct:#9aa5b4; --link:#1d63d8;
+  --hit:#ffe9a8; --hitedge:#f2c744; --err:#d92d20; --errbg:#fef3f2; --ok:#12805c; --okbg:#ecfaf3;
+  --badge:#eef0ff; --badge-t:#4338ca;
+  --gutter:#b3bcc9; --gutter-act:#66707f; --curline:#fff8e6;
+  --shadow:0 1px 2px rgba(16,24,40,.05),0 4px 16px rgba(16,24,40,.06);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+html[data-theme="dark"]{
+  --bg:#0b0f17; --panel:#111826; --panel2:#0e1420; --border:#223047; --border2:#1a2536;
+  --text:#dde4ee; --muted:#8d99ab; --faint:#5d6b7f;
+  --accent:#818cf8; --accent-soft:#1b2138; --accent-text:#a5b4fc;
+  --key:#c4b5fd; --str:#5fd692; --num:#79b2ff; --bool:#fbbf24; --null:#64748b; --punct:#5d6b7f; --link:#79b2ff;
+  --hit:rgba(250,204,21,.22); --hitedge:rgba(250,204,21,.55); --err:#f87171; --errbg:#2a1518; --ok:#34d399; --okbg:#0d2620;
+  --badge:#1b2138; --badge-t:#a5b4fc;
+  --gutter:#3a4761; --gutter-act:#8d99ab; --curline:#1a2130;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+a{color:var(--link)}
+.wrap{max-width:1440px;margin:0 auto;padding:0 16px}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;gap:12px;padding:10px 0}
+.brand{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;letter-spacing:-.01em}
+.brand svg{display:block}
+.brand .tag{font-size:12px;font-weight:500;color:var(--muted);border-left:1px solid var(--border);padding-left:10px;margin-left:2px}
+.grow{flex:1}
+.ghost{background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:5px 10px;font-size:12.5px;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
+.ghost:hover{color:var(--text);border-color:var(--faint)}
+
+/* ---------- hero ---------- */
+.hero{padding:8px 0 14px}
+.hero h1{margin:0;font-size:clamp(19px,2.6vw,26px);letter-spacing:-.02em;line-height:1.25}
+.hero .sub{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:900px}
+.hero .sub b{color:var(--text);font-weight:600}
+
+/* ---------- toolbar ---------- */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px;box-shadow:var(--shadow)}
+.tbtn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:13px;color:var(--text);white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent-text);background:var(--accent-soft)}
+.tbtn svg{flex:none}
+.tbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tbtn.primary:hover{filter:brightness(1.08);color:#fff}
+.sep{width:1px;height:20px;background:var(--border);margin:0 2px}
+select.mini{background:var(--panel);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12.5px;padding:5px 6px}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none;padding:0 2px}
+.switch input{display:none}
+.switch .sl{width:30px;height:17px;border-radius:9px;background:var(--border);position:relative;transition:background .15s;flex:none}
+.switch .sl::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+.switch input:checked+.sl{background:var(--accent)}
+.switch input:checked+.sl::after{left:15px}
+
+/* ---------- panes ---------- */
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;align-items:stretch}
+.pane{background:var(--panel);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;min-width:0;overflow:hidden;box-shadow:var(--shadow)}
+.pane-h{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border2);font-size:12.5px;color:var(--muted)}
+.pane-h b{color:var(--text);font-size:13px}
+.mini-btn{background:none;border:none;color:var(--muted);font-size:12px;padding:2px 6px;border-radius:6px}
+.mini-btn:hover{color:var(--accent-text);background:var(--accent-soft)}
+
+.editor{display:flex;flex:1;min-height:0;position:relative;background:var(--panel2)}
+.gutter{flex:none;width:44px;overflow:hidden;padding:10px 0;text-align:right;color:var(--gutter);font-family:var(--mono);font-size:12px;line-height:1.6;user-select:none;background:var(--panel);border-right:1px solid var(--border2)}
+.gutter div{padding-right:9px}
+.gutter div.cur{color:var(--accent-text);background:var(--accent-soft)}
+.gutter div.errline{color:var(--err);background:var(--errbg)}
+#in{flex:1;border:none;outline:none;resize:none;padding:10px 12px;background:transparent;color:var(--text);font-family:var(--mono);font-size:12.5px;line-height:1.6;min-height:340px;white-space:pre;overflow:auto;tab-size:2}
+#in::placeholder{color:var(--faint)}
+#in.dragover{outline:2px dashed var(--accent);outline-offset:-6px}
+
+.statusbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 12px;border-top:1px solid var(--border2);font-size:12px;color:var(--muted);font-family:var(--mono)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+.dot.ok{background:var(--ok)} .dot.err{background:var(--err)}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--panel2);border:1px solid var(--border2);border-radius:6px;padding:1px 7px;font-size:11.5px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:4px;background:var(--badge);color:var(--badge-t);border-radius:6px;padding:1px 8px;font-size:11.5px;font-weight:600}
+
+.banner{margin:0;padding:9px 12px;border-top:1px solid var(--border2);font-size:12.5px}
+.banner.err{background:var(--errbg);color:var(--text)}
+.banner.ok{background:var(--okbg)}
+.banner .btitle{display:flex;align-items:center;gap:8px;font-weight:600}
+.banner.err .btitle{color:var(--err)} .banner.ok .btitle{color:var(--ok)}
+.banner pre{margin:7px 0 0;font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:7px 9px;overflow-x:auto;white-space:pre;line-height:1.5}
+.banner .caret{color:var(--err);font-weight:700}
+.banner .bact{margin-top:7px;display:flex;gap:8px;flex-wrap:wrap}
+.bbtn{background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:4px 10px;font-size:12px;color:var(--text)}
+.bbtn:hover{border-color:var(--accent);color:var(--accent-text)}
+.bhint{color:var(--muted);margin-top:3px}
+
+/* ---------- result pane ---------- */
+.tabs{display:flex;align-items:center;gap:4px;padding:6px 8px;border-bottom:1px solid var(--border2);flex-wrap:wrap}
+.tab{background:none;border:none;border-radius:8px;padding:5px 12px;font-size:13px;color:var(--muted);font-weight:500}
+.tab:hover{color:var(--text)}
+.tab.on{background:var(--accent-soft);color:var(--accent-text);font-weight:600}
+.viewbar{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--border2);flex-wrap:wrap}
+.qin{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:12.5px;color:var(--text);font-family:var(--mono);outline:none}
+.qin:focus{border-color:var(--accent)}
+.qin::placeholder{color:var(--faint);font-family:var(--sans)}
+.qgroup{display:flex;align-items:center;gap:4px;flex:1;min-width:210px}
+.qcount{font-size:11.5px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.iconbtn{background:none;border:1px solid var(--border);border-radius:7px;color:var(--muted);padding:3px 8px;font-size:12px;white-space:nowrap}
+.iconbtn:hover{color:var(--accent-text);border-color:var(--accent)}
+
+.tree{flex:1;overflow:auto;padding:8px 10px 40vh;font-family:var(--mono);font-size:12.5px;line-height:1.75;min-height:340px}
+.tnode{position:relative}
+.trow{display:flex;align-items:baseline;gap:0;padding:0 6px;border-radius:6px;white-space:pre;position:relative}
+.trow:hover{background:var(--accent-soft)}
+.trow.hit{background:var(--hit);outline:1px solid var(--hitedge)}
+.trow.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%{background:var(--hit)}70%{background:var(--hit)}100%{background:transparent}}
+.tw{display:inline-block;width:17px;flex:none;text-align:center;color:var(--faint);cursor:pointer;user-select:none;font-size:10px;transform:translateY(-1px)}
+.tw:hover{color:var(--accent)}
+.tnode.open>.trow .tw{transform:translateY(-1px) rotate(90deg)}
+.tw.leaf{visibility:hidden}
+.tk{color:var(--key)}
+.tp{color:var(--punct)}
+.tv{cursor:pointer;border-radius:4px}
+.tv:hover{outline:1px solid var(--border)}
+.tv.tstr{color:var(--str)} .tv.tnum{color:var(--num)} .tv.tbool{color:var(--bool)} .tv.tnull{color:var(--null);font-style:italic}
+.tmeta{color:var(--faint);font-size:11px;margin-left:8px}
+.tprev{color:var(--faint);font-size:11.5px;margin-left:8px;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+.tkids{margin-left:17px;border-left:1px dotted var(--border);padding-left:6px}
+.qa{display:none;align-items:center;gap:2px;margin-left:8px;vertical-align:middle}
+.trow:hover .qa{display:inline-flex}
+.qa button{background:none;border:none;color:var(--faint);font-size:10.5px;padding:1px 5px;border-radius:5px;border:1px solid transparent}
+.qa button:hover{color:var(--accent-text);background:var(--panel);border-color:var(--border)}
+
+.rawwrap{flex:1;overflow:auto;padding:12px 14px;min-height:340px}
+.rawwrap pre{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.65;white-space:pre-wrap;word-break:break-all}
+.jv.k{color:var(--key)} .jv.s{color:var(--str)} .jv.n{color:var(--num)} .jv.b{color:var(--bool)} .jv.z{color:var(--null)} .jv.p{color:var(--punct)}
+
+.jpp{border-top:1px solid var(--border2);max-height:230px;overflow:auto;padding:6px 10px;font-family:var(--mono);font-size:12px}
+.jpp .jrow{display:flex;gap:10px;padding:3px 6px;border-radius:6px;cursor:pointer;align-items:baseline}
+.jpp .jrow:hover{background:var(--accent-soft)}
+.jpp .jpath{color:var(--accent-text);white-space:nowrap}
+.jpp .jval{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- mobile ---------- */
+.mobtabs{display:none;margin-top:12px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px;gap:4px}
+.mobtabs button{flex:1;border:none;background:none;border-radius:7px;padding:7px;font-size:13px;color:var(--muted);font-weight:500}
+.mobtabs button.on{background:var(--accent-soft);color:var(--accent-text);font-weight:600}
+@media (max-width:980px){
+  .mobtabs{display:flex}
+  .panes{grid-template-columns:1fr}
+  .pane.right{display:none}
+  .panes.show-right .pane.right{display:flex}
+  .panes.show-right .pane.left{display:none}
+  .hero .sub{display:none}
+}
+
+/* ---------- guide / faq / footer ---------- */
+.guide{margin-top:34px}
+.guide h2,.faq h2{font-size:20px;letter-spacing:-.01em;margin:0 0 4px}
+.guide .lead,.faq .lead{color:var(--muted);margin:0 0 14px;font-size:13.5px}
+.gdetails{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.gdetails summary{cursor:pointer;padding:13px 16px;font-weight:600;font-size:14.5px;list-style:none;display:flex;align-items:center;gap:10px}
+.gdetails summary::-webkit-details-marker{display:none}
+.gdetails summary::before{content:"+";color:var(--accent);font-weight:700;font-size:16px;width:14px;flex:none}
+.gdetails[open] summary::before{content:"−"}
+.gdetails summary:hover{background:var(--panel2)}
+.gbody{padding:2px 18px 16px;font-size:13.5px;color:var(--text);border-top:1px solid var(--border2)}
+.gbody h3{font-size:14px;margin:16px 0 6px}
+.gbody p{margin:8px 0;color:var(--muted)}
+.gbody code{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--border2);border-radius:5px;padding:1px 5px;color:var(--accent-text)}
+.gbody pre{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;overflow-x:auto;font-size:12px;font-family:var(--mono);line-height:1.6}
+.gbody table{border-collapse:collapse;width:100%;font-size:12.5px;margin:10px 0}
+.gbody th,.gbody td{border:1px solid var(--border);padding:6px 9px;text-align:left;vertical-align:top}
+.gbody th{background:var(--panel2);font-weight:600}
+.gbody td code{white-space:nowrap}
+.gbody ul{margin:8px 0;padding-left:20px;color:var(--muted)}
+.gbody li{margin:4px 0}
+.fitem{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;padding:13px 16px}
+.fitem b{display:block;font-size:14.5px;margin-bottom:5px}
+.fitem p{margin:0;color:var(--muted);font-size:13.5px}
+.fitem code{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--border2);border-radius:5px;padding:1px 5px;color:var(--accent-text)}
+footer{margin-top:36px;padding:20px 0 34px;border-top:1px solid var(--border);color:var(--faint);font-size:12.5px}
+footer a{color:var(--muted)}
+footer .frow{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:9px;font-size:13px;box-shadow:var(--shadow);z-index:99;max-width:80vw}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="6" fill="var(--accent)"/><path d="M8 7.5c-1.5 0-2 .8-2 2v1.6c0 .9-.4 1.5-1.5 1.9 1.1.4 1.5 1 1.5 1.9v1.6c0 1.2.5 2 2 2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M18 7.5c1.5 0 2 .8 2 2v1.6c0 .9.4 1.5 1.5 1.9-1.1.4-1.5 1-1.5 1.9v1.6c0 1.2-.5 2-2 2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><circle cx="13" cy="13" r="1.6" fill="#fff"/></svg>
+    <b>JSON Lens</b>
+    <span class="tag" data-i18n="tagline">Free online JSON toolkit</span>
+  </div>
+  <div class="grow"></div>
+  <button id="btnLang" class="ghost">中文</button>
+  <button id="btnTheme" class="ghost" title="Theme">◐</button>
+  <a class="ghost" href="https://github.com/Tliens/jsonlens" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
+<section class="hero">
+  <h1 data-i18n="h1">Online JSON Formatter, Validator &amp; Tree Viewer</h1>
+  <p class="sub" data-rich="sub">Paste JSON or an escaped JSON string — <b>auto-repair</b> fixes quotes, trailing commas &amp; comments, <b>Unescape</b> turns <code>"{\"a\":1}"</code> back into JSON, and a <b>collapsible tree</b> with JSONPath queries helps you explore any structure. <b>Everything runs in your browser</b> — nothing is uploaded.</p>
+</section>
+
+<main>
+  <div class="toolbar" role="toolbar" aria-label="JSON actions">
+    <button class="tbtn primary" id="btnFormat" title="Ctrl/⌘+Enter">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M5 3 2 8l3 5M11 3l3 5-3 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-i18n="fmt">Format</span>
+    </button>
+    <select class="mini" id="selIndent" title="Indent" aria-label="Indent size"><option value="2">2 spaces</option><option value="4">4 spaces</option><option value="tab">Tab</option></select>
+    <button class="tbtn" id="btnMinify">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M9 3h4M9 8h6M9 13h4M2 3h3M2 8h3M2 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span data-i18n="minify">Minify</span>
+    </button>
+    <span class="sep" aria-hidden="true"></span>
+    <button class="tbtn" id="btnUnescape" title="Unescape JSON string → JSON">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 6v3a3 3 0 0 0 3 3h1M13 10V7a3 3 0 0 0-3-3H9M11 12l2 2 2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-i18n="unescape">Unescape</span>
+    </button>
+    <button class="tbtn" id="btnEscape" title="JSON → escaped string">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 10V7a3 3 0 0 1 3-3h1M13 6v3a3 3 0 0 1-3 3H9M11 4l2-2 2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-i18n="escape">Escape</span>
+    </button>
+    <label class="switch" title="Try to fix broken JSON automatically"><input type="checkbox" id="chkRepair" checked><span class="sl"></span><span data-i18n="repair">Auto-repair</span></label>
+    <span class="sep" aria-hidden="true"></span>
+    <button class="tbtn" id="btnSample"><span data-i18n="sample">Sample</span></button>
+    <button class="tbtn" id="btnClear"><span data-i18n="clear">Clear</span></button>
+    <button class="tbtn" id="btnOpen">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h3l1.5 2h4.5A1.5 1.5 0 0 1 14 6.5v5A1.5 1.5 0 0 1 12.5 13h-9A1.5 1.5 0 0 1 2 11.5v-7Z" stroke="currentColor" stroke-width="1.4"/></svg>
+      <span data-i18n="open">Open</span>
+    </button>
+    <input type="file" id="fileIn" hidden accept=".json,.txt,.jsonl,.ndjson,.geojson,application/json">
+    <button class="tbtn" id="btnDownload"><span data-i18n="download">Download</span></button>
+    <button class="tbtn" id="btnShare">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="12" cy="3.5" r="2" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="8" r="2" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12.5" r="2" stroke="currentColor" stroke-width="1.4"/><path d="m5.8 7 4.4-2.6M5.8 9l4.4 2.6" stroke="currentColor" stroke-width="1.4"/></svg>
+      <span data-i18n="share">Share</span>
+    </button>
+    <div class="grow"></div>
+    <button class="tbtn primary" id="btnParseBig" hidden><span data-i18n="btnParse">Parse</span></button>
+    <span class="badge" id="srcBadge" hidden></span>
+  </div>
+
+  <div class="mobtabs" id="mobtabs">
+    <button id="mobIn" class="on" data-i18n="mInput">Editor</button>
+    <button id="mobOut" data-i18n="mResult">Result</button>
+  </div>
+
+  <div class="panes" id="panes">
+    <section class="pane left" id="paneIn">
+      <div class="pane-h">
+        <b data-i18n="input">Input</b>
+        <span class="grow"></span>
+        <span id="inStats">0 B</span>
+        <button class="mini-btn" id="btnPaste" data-i18n="paste">Paste</button>
+      </div>
+      <div class="editor">
+        <div class="gutter" id="gutter"><div>1</div></div>
+        <textarea id="in" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" wrap="off" data-i18n-ph="phInput" placeholder='Paste JSON here — or an escaped JSON string like "{\"a\": 1}"…'></textarea>
+      </div>
+      <div class="statusbar"><span class="dot" id="stDot"></span><span id="stTxt" data-i18n="stIdle">Waiting for input…</span></div>
+      <div class="banner err" id="errBanner" hidden></div>
+      <div class="banner ok" id="fixBanner" hidden></div>
+    </section>
+
+    <section class="pane right" id="paneOut">
+      <div class="tabs">
+        <button class="tab on" id="tabTree" data-i18n="tree">Tree</button>
+        <button class="tab" id="tabRaw" data-i18n="formatted">Formatted</button>
+        <span class="grow"></span>
+        <span class="badge" id="fixBadge" hidden></span>
+      </div>
+      <div class="viewbar" id="treeBar">
+        <div class="qgroup">
+          <input class="qin" id="q" data-i18n-ph="phSearch" placeholder="Search keys &amp; values…" style="flex:2">
+          <span class="qcount" id="qCount"></span>
+          <button class="iconbtn" id="qPrev" title="Previous match">↑</button>
+          <button class="iconbtn" id="qNext" title="Next match">↓</button>
+        </div>
+        <div class="qgroup">
+          <input class="qin" id="jp" data-i18n-ph="phJp" placeholder='JSONPath: $..name · $.a[0].b · [?(@.id==1)]' style="flex:2">
+          <button class="iconbtn" id="jpRun" data-i18n="run">Run</button>
+          <span class="qcount" id="jpCount"></span>
+          <button class="iconbtn" id="jpCopy" data-i18n="copy" title="Copy results as JSON" hidden>⧉</button>
+        </div>
+        <select class="mini" id="selExpand" title="Expand depth">
+          <option value="1">L1</option><option value="2" selected>L2</option><option value="3">L3</option><option value="4">L4</option><option value="5">L5</option><option value="99" data-i18n="expAll">All</option>
+        </select>
+        <select class="mini" id="selPath" title="Path style for copy">
+          <option value="jp" selected>$.a[0]</option><option value="js">a.b[0]</option><option value="py">['a'][0]</option>
+        </select>
+        <button class="iconbtn" id="btnExpAll" data-i18n="expAllB">Expand all</button>
+        <button class="iconbtn" id="btnColAll" data-i18n="colAllB">Collapse</button>
+      </div>
+      <div class="tree" id="tree" tabindex="0"></div>
+      <div class="rawwrap" id="rawWrap" hidden></div>
+      <div class="jpp" id="jpPanel" hidden></div>
+    </section>
+  </div>
+</main>
+
+<section class="guide" id="guide">
+  <h2 data-i18n="gH">Developer's guide</h2>
+  <p class="lead" data-i18n="gLead">Everything about JSON formatting, escaping and debugging — with copy-paste examples.</p>
+
+  <details class="gdetails" open>
+    <summary data-i18n="g1t">What is valid JSON? A 60-second cheat sheet</summary>
+    <div class="gbody" data-rich="g1">
+      <p>JSON (RFC 8259) is strict. These are the rules people break most often:</p>
+      <ul>
+        <li><b>Keys must use double quotes.</b> <code>{name: 1}</code> and <code>{'name': 1}</code> are invalid — write <code>{"name": 1}</code>.</li>
+        <li><b>No trailing commas.</b> <code>[1, 2, 3,]</code> fails. Arrays and objects end without a comma.</li>
+        <li><b>Strings use double quotes only</b>, and only these escapes: <code>\" \\ \/ \b \f \n \r \t \uXXXX</code>. A raw newline inside a string is invalid — use <code>\n</code>.</li>
+        <li><b>Literal values are fixed:</b> <code>true</code> / <code>false</code> / <code>null</code>. Python's <code>True</code>/<code>None</code>, JS <code>undefined</code>, <code>NaN</code> and <code>Infinity</code> are not JSON.</li>
+        <li><b>No comments.</b> <code>//</code> and <code>/* */</code> are not allowed (JSON5/JSONC add them back).</li>
+        <li>Numbers: no leading zeros (<code>01</code>), no hex (<code>0x1F</code>), exponents allowed (<code>1.5e10</code>).</li>
+        <li>Top level can be any value: object, array, string, number, <code>true</code>, <code>false</code>, <code>null</code>.</li>
+      </ul>
+      <p>Enable <b>Auto-repair</b> and JSON Lens fixes the common violations for you, showing exactly what it changed.</p>
+    </div>
+  </details>
+
+  <details class="gdetails">
+    <summary data-i18n="g2t">Common JSON errors and how to fix them</summary>
+    <div class="gbody" data-rich="g2">
+      <table>
+        <tr><th>Error message</th><th>Typical cause</th><th>Fix</th></tr>
+        <tr><td><code>Expected property name or '}'</code></td><td>Unquoted key, or single-quoted key</td><td>Quote the key with double quotes — or let Auto-repair do it</td></tr>
+        <tr><td><code>Unexpected token ' in JSON</code></td><td>Single-quoted string</td><td>Convert <code>'…'</code> to <code>"…"</code> (Auto-repair handles it)</td></tr>
+        <tr><td><code>Unexpected token } … at position N</code></td><td>Trailing comma before <code>}</code> or <code>]</code></td><td>Remove the comma; the caret in the error banner shows the spot</td></tr>
+        <tr><td><code>Unexpected end of JSON input</code></td><td>Truncated / half-pasted JSON</td><td>Check that all brackets are closed — copy the input again in full</td></tr>
+        <tr><td><code>Unexpected token \n … at line N</code></td><td>Raw newline or tab inside a string</td><td>Escape it as <code>\n</code> / <code>\t</code></td></tr>
+        <tr><td><code>Unexpected token N in JSON</code></td><td><code>NaN</code>, <code>Infinity</code> or <code>undefined</code> in the data</td><td>Replace with <code>null</code> (Auto-repair replaces them)</td></tr>
+        <tr><td>Looks fine but still fails</td><td>Smart quotes “ ” ‘ ’ from Word/macOS, BOM, or invisible zero-width characters</td><td>Auto-repair normalizes them; paste as plain text</td></tr>
+        <tr><td>Multiple objects, one per line</td><td>That's JSON Lines (NDJSON), not a single JSON value</td><td>Auto-repair wraps them into an array</td></tr>
+      </table>
+      <p>JSON Lens shows the error's <b>line and column</b>, prints the offending line with a caret, and offers one-click repair.</p>
+    </div>
+  </details>
+
+  <details class="gdetails">
+    <summary data-i18n="g3t">Escaped JSON strings: why they exist and how to unescape them</summary>
+    <div class="gbody" data-rich="g3">
+      <p>An "escaped JSON string" is JSON wrapped as a string value — what you get from <code>JSON.stringify(obj)</code> inside another JSON, from logs, or from message queues:</p>
+      <pre>"{\"name\":\"Alice\",\"tags\":[\"a\",\"b\"],\"ok\":true}"</pre>
+      <p>Each inner quote is prefixed with <code>\</code>. To get real JSON back you must parse the string once. Common sources of escaped JSON:</p>
+      <ul>
+        <li><b>Double-encoded APIs</b> — a server stringifies an object, then stringifies the whole response again.</li>
+        <li><b>Log lines</b> where the payload is stored as a string field.</li>
+        <li><b>Shell/curl output</b> with escaped quotes.</li>
+        <li><b>URL-encoded</b> (<code>%7B%22a%22</code>…) or <b>Base64-encoded</b> (<code>eyJuYW1lIjo…</code>) JSON in query strings and JWT-like tokens.</li>
+      </ul>
+      <p>JSON Lens detects each layer automatically — quotes, <code>\n</code>/<code>\"</code> escapes, URL-encoding, Base64 — and unwraps <b>multiple layers in one click</b>. The Escape button does the reverse: it turns your JSON into a safely escaped string you can paste into code or another JSON document.</p>
+      <h3>Escape sequences reference</h3>
+      <table>
+        <tr><th>Sequence</th><th>Meaning</th></tr>
+        <tr><td><code>\"</code></td><td>Double quote</td></tr>
+        <tr><td><code>\\</code></td><td>Backslash</td></tr>
+        <tr><td><code>\/</code></td><td>Forward slash (optional escape)</td></tr>
+        <tr><td><code>\n \r \t</code></td><td>Line feed, carriage return, tab</td></tr>
+        <tr><td><code>\b \f</code></td><td>Backspace, form feed</td></tr>
+        <tr><td><code>\uXXXX</code></td><td>Unicode code point (4 hex digits), e.g. <code>\u4e2d</code> = 中</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details class="gdetails">
+    <summary data-i18n="g4t">JSONPath quick reference</summary>
+    <div class="gbody" data-rich="g4">
+      <p>Type a JSONPath above the tree and press Run. Supported syntax:</p>
+      <table>
+        <tr><th>Expression</th><th>Meaning</th></tr>
+        <tr><td><code>$</code></td><td>Root object</td></tr>
+        <tr><td><code>.key</code> or <code>['key']</code></td><td>Object member</td></tr>
+        <tr><td><code>[0]</code>, <code>[-1]</code></td><td>Array index (negative counts from the end)</td></tr>
+        <tr><td><code>[0,2]</code></td><td>Multiple indexes</td></tr>
+        <tr><td><code>[1:4]</code>, <code>[::2]</code></td><td>Array slice with optional step</td></tr>
+        <tr><td><code>.*</code>, <code>[*]</code></td><td>All members / items</td></tr>
+        <tr><td><code>..key</code></td><td>Recursive descent — every <code>key</code> at any depth</td></tr>
+        <tr><td><code>[?(@.price&lt;10)]</code></td><td>Filter: <code>== != &lt; &lt;= &gt; &gt;=</code>, e.g. <code>[?(@.type=='a')]</code>, <code>[?(@.active)]</code></td></tr>
+      </table>
+      <pre>$.store.book[*].author        // all authors
+$..price                      // every "price" anywhere
+$.items[?(@.qty &gt;= 2 &amp; @.id != 9)]</pre>
+      <p>Results are listed under the tree — click one to jump to the node, or copy them all as a JSON array.</p>
+    </div>
+  </details>
+
+  <details class="gdetails">
+    <summary data-i18n="g5t">JSON ↔ JavaScript: stringify/parse gotchas</summary>
+    <div class="gbody" data-rich="g5">
+      <ul>
+        <li><code>JSON.stringify</code> drops <code>undefined</code> (object properties and array items), functions and symbols; it turns <code>NaN</code>/<code>Infinity</code> into <code>null</code>.</li>
+        <li><code>Date</code> objects become ISO strings — parsing them back gives strings, not Dates.</li>
+        <li><code>BigInt</code> throws. Work around it with a replacer (<code>BigInt.prototype.toJSON</code> or string conversion).</li>
+        <li>Circular references throw <code>Converting circular structure to JSON</code> — use a replacer that tracks seen objects.</li>
+        <li>Key order: objects preserve insertion order (integer-like keys first, ascending); parsing never reorders them beyond that rule.</li>
+        <li><code>JSON.parse</code> loses number precision for very long numbers (<code>9007199254740993</code> becomes …992) — handle IDs as strings server-side.</li>
+        <li>Duplicate keys: the last one silently wins.</li>
+        <li><code>-0</code>, sparse arrays, and <code>toJSON()</code> side effects all surprise people; when debugging, prefer the tree view which shows exactly what was parsed.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="gdetails">
+    <summary data-i18n="g6t">Privacy &amp; how JSON Lens works</summary>
+    <div class="gbody" data-rich="g6">
+      <p><b>Your data never leaves the browser.</b> There is no backend: parsing, repair, unescaping, JSONPath queries and TS/Schema export all run as local JavaScript. The page has no external scripts, no cookies and no tracking of your input — you can safely paste API responses containing tokens (just remember the share link encodes data in the URL itself, so only share it intentionally).</p>
+      <p>Under the hood: input is parsed with the native <code>JSON.parse</code> for exact, spec-compliant validation. If it fails, a layered pipeline tries string-unescape (quotes → <code>\n</code>/<code>\"</code> → URL → Base64), then targeted repairs (quotes, commas, comments, literals), reporting every fix. The tree renders nodes lazily, so even large documents stay responsive — and above 2 MB live parsing switches to a manual Parse button.</p>
+    </div>
+  </details>
+</section>
+
+<section class="faq" id="faq">
+  <h2 data-i18n="fH">FAQ</h2>
+  <p class="lead" data-i18n="fLead">Quick answers about this JSON formatter and viewer.</p>
+  <div class="fitem"><b data-i18n="fq1">Is my JSON data uploaded to a server?</b><p data-i18n="fq1a">No. All parsing, formatting, repair and querying happens locally in your browser with JavaScript. Your input never leaves your device — there is no backend at all.</p></div>
+  <div class="fitem"><b data-i18n="fq2">How do I convert an escaped JSON string back to JSON?</b><p data-i18n="fq2a">Paste the escaped string and JSON Lens auto-detects it. You can also press the Unescape button. It strips wrapping quotes, resolves \n, \" and \\ sequences, and handles multi-layer escaping, URL-encoded and Base64-encoded JSON.</p></div>
+  <div class="fitem"><b data-i18n="fq3">What kinds of broken JSON can auto-repair fix?</b><p data-i18n="fq3a">Single quotes, trailing commas, unquoted keys, // and /* */ comments, Python literals (True/False/None), NaN/Infinity, smart quotes copied from rich text, and JSON Lines (one object per line, wrapped into an array).</p></div>
+  <div class="fitem"><b data-i18n="fq4">How can I query a value deep inside a large JSON?</b><p data-i18n="fq4a">Use the JSONPath bar above the tree. Examples: $.store.book[0].title, $..author, $.items[?(@.price&lt;10)]. Matching nodes are highlighted and results can be copied as JSON.</p></div>
+  <div class="fitem"><b data-i18n="fq5">Is there a size limit?</b><p data-i18n="fq5a">There is no hard limit. Inputs up to a few MB parse instantly; above 2 MB live parsing switches to a manual Parse button to keep the page responsive, and the tree lazily renders nodes only when you expand them.</p></div>
+</section>
+
+<footer>
+  <div class="frow">
+    <span data-i18n="footPrivacy">🔒 100% client-side — your JSON never leaves your browser.</span>
+    <span>·</span>
+    <a href="https://github.com/Tliens/jsonlens" target="_blank" rel="noopener">GitHub</a>
+    <span>·</span>
+    <a href="https://tliens.github.io/sse-inspector/" target="_blank" rel="noopener" data-i18n="footSse">SSE Inspector — online SSE debugging tool</a>
+  </div>
+  <div style="margin-top:8px">JSON Lens · free online JSON formatter &amp; viewer · <span id="year">2026</span></div>
+</footer>
+
+</div>
+<div id="toast" class="toast" hidden></div>
+<script type="module">
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const escH = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const debounce = (f, ms) => { let h; return (...a) => { clearTimeout(h); h = setTimeout(() => f(...a), ms); }; };
+
+/* ================= i18n ================= */
+const EN = {
+  title: 'JSON Lens — Online JSON Formatter, Validator & Tree Viewer | Unescape, JSONPath',
+  desc: 'Free online JSON formatter & validator for developers. Format, minify, auto-repair, unescape JSON strings, collapse/expand tree view, error locator and JSONPath queries — 100% in your browser.',
+  tagline: 'Free online JSON toolkit',
+  h1: 'Online JSON Formatter, Validator & Tree Viewer',
+  fmt: 'Format', minify: 'Minify', unescape: 'Unescape', escape: 'Escape', repair: 'Auto-repair',
+  sample: 'Sample', clear: 'Clear', open: 'Open', download: 'Download', share: 'Share',
+  mInput: 'Editor', mResult: 'Result', input: 'Input', paste: 'Paste',
+  phInput: 'Paste JSON here — or an escaped JSON string like "{\\"a\\": 1}"…',
+  phSearch: 'Search keys & values…',
+  phJp: 'JSONPath: $..name · $.a[0].b · [?(@.id==1)]',
+  run: 'Run', copy: '⧉', expAll: 'All', expAllB: 'Expand all', colAllB: 'Collapse',
+  tree: 'Tree', formatted: 'Formatted',
+  stIdle: 'Waiting for input…',
+  stEmpty: 'Empty input',
+  stValid: 'Valid JSON',
+  stInvalid: 'Invalid JSON',
+  stManual: 'Large input — live parse paused',
+  btnParse: 'Parse',
+  errHead: 'Invalid JSON',
+  jump: 'Jump to error', tryRepair: 'Try auto-repair',
+  fixedHead: 'Auto-fixed before parsing', undo: 'Undo fixes',
+  bStrict: 'strict', bUnesc: 'unescaped', bRep: 'repaired',
+  treeEmpty: 'Parse a JSON to explore its structure here',
+  rawEmpty: 'Formatted output will appear here',
+  qNoMatch: 'no match',
+  jpNoRes: 'no results',
+  copied: 'Copied ✓',
+  copyPathT: 'Copy path', copyValT: 'Copy value',
+  shareBig: 'Too large for a share link (over 200 KB after compression)',
+  shareOk: 'Share link copied — data is embedded in the URL, share intentionally',
+  shareErr: 'Could not build share link',
+  pasteFail: 'Could not read clipboard — press Ctrl/⌘+V in the editor',
+  fileBig: 'File too large (over 20 MB)',
+  loadErr: 'Not a text file / could not read',
+  undoDone: 'Original input restored',
+  expWarn: 'Very large document — expand-all capped to level 3',
+  parseBig: 'Parsed — tree may be slow on very large data',
+  footPrivacy: '🔒 100% client-side — your JSON never leaves your browser.',
+  footSse: 'SSE Inspector — online SSE debugging tool',
+  gH: "Developer's guide", fH: 'FAQ',
+  gLead: 'Everything about JSON formatting, escaping and debugging — with copy-paste examples.',
+  g1t: 'What is valid JSON? A 60-second cheat sheet',
+  g2t: 'Common JSON errors and how to fix them',
+  g3t: 'Escaped JSON strings: why they exist and how to unescape them',
+  g4t: 'JSONPath quick reference',
+  g5t: 'JSON ↔ JavaScript: stringify/parse gotchas',
+  g6t: 'Privacy & how JSON Lens works',
+  fLead: 'Quick answers about this JSON formatter and viewer.',
+  fq1: 'Is my JSON data uploaded to a server?',
+  fq1a: 'No. All parsing, formatting, repair and querying happens locally in your browser with JavaScript. Your input never leaves your device — there is no backend at all.',
+  fq2: 'How do I convert an escaped JSON string back to JSON?',
+  fq2a: 'Paste the escaped string and JSON Lens auto-detects it. You can also press the Unescape button. It strips wrapping quotes, resolves \\n, \\" and \\\\ sequences, and handles multi-layer escaping, URL-encoded and Base64-encoded JSON.',
+  fq3: 'What kinds of broken JSON can auto-repair fix?',
+  fq3a: 'Single quotes, trailing commas, unquoted keys, // and /* */ comments, Python literals (True/False/None), NaN/Infinity, smart quotes copied from rich text, and JSON Lines (one object per line, wrapped into an array).',
+  fq4: 'How can I query a value deep inside a large JSON?',
+  fq4a: 'Use the JSONPath bar above the tree. Examples: $.store.book[0].title, $..author, $.items[?(@.price<10)]. Matching nodes are highlighted and results can be copied as JSON.',
+  fq5: 'Is there a size limit?',
+  fq5a: 'There is no hard limit. Inputs up to a few MB parse instantly; above 2 MB live parsing switches to a manual Parse button to keep the page responsive, and the tree lazily renders nodes only when you expand them.',
+};
+const ZH = {
+  title: 'JSON Lens — JSON 在线解析格式化工具 | 转义互转、JSONPath、错误定位',
+  desc: '面向开发者的免费 JSON 在线解析工具：格式化、压缩、自动修复、去转义（JSON string 转 JSON）、折叠树形查看、错误行列定位、JSONPath 查询。纯浏览器本地运行，数据不上传。',
+  tagline: '免费在线 JSON 工具箱',
+  h1: 'JSON 在线解析 · 格式化 · 校验 · 树形查看',
+  fmt: '格式化', minify: '压缩', unescape: '去转义', escape: '转义', repair: '自动修复',
+  sample: '示例', clear: '清空', open: '打开', download: '下载', share: '分享',
+  mInput: '编辑器', mResult: '结果', input: '输入', paste: '粘贴',
+  phInput: '粘贴 JSON，或形如 "{\\"a\\": 1}" 的转义 JSON 字符串…',
+  phSearch: '搜索键名和值…',
+  phJp: 'JSONPath：$..name · $.a[0].b · [?(@.id==1)]',
+  run: '查询', copy: '⧉', expAll: '全部', expAllB: '全部展开', colAllB: '全部折叠',
+  tree: '树', formatted: '格式化',
+  stIdle: '等待输入…',
+  stEmpty: '输入为空',
+  stValid: 'JSON 有效',
+  stInvalid: 'JSON 无效',
+  stManual: '输入较大 — 已暂停实时解析',
+  btnParse: '解析',
+  errHead: 'JSON 无效',
+  jump: '跳到错误处', tryRepair: '尝试自动修复',
+  fixedHead: '解析前已自动修复', undo: '撤销修复',
+  bStrict: '严格模式', bUnesc: '已去转义', bRep: '已修复',
+  treeEmpty: '解析后即可在此浏览结构',
+  rawEmpty: '格式化结果将显示在这里',
+  qNoMatch: '无匹配',
+  jpNoRes: '无结果',
+  copied: '已复制 ✓',
+  copyPathT: '复制路径', copyValT: '复制值',
+  shareBig: '内容过大，无法生成分享链接（压缩后仍超过 200 KB）',
+  shareOk: '分享链接已复制 — 数据包含在 URL 中，请谨慎分享',
+  shareErr: '分享链接生成失败',
+  pasteFail: '无法读取剪贴板 — 请在编辑器中按 Ctrl/⌘+V 粘贴',
+  fileBig: '文件过大（超过 20 MB）',
+  loadErr: '无法按文本读取该文件',
+  undoDone: '已恢复原始输入',
+  expWarn: '文档过大 — 全部展开最多到第 3 层',
+  parseBig: '已解析 — 数据很大，树操作可能略慢',
+  footPrivacy: '🔒 纯浏览器本地运行 — JSON 数据不会离开你的设备。',
+  footSse: 'SSE Inspector — SSE 在线调试工具',
+  gH: '开发者指南', fH: '常见问题',
+  gLead: '关于 JSON 格式、转义与调试的一切 —— 均附可直接复制的示例。',
+  g1t: '什么是合法 JSON？一分钟速查',
+  g2t: '常见 JSON 错误与修复方法',
+  g3t: '转义的 JSON 字符串：从哪来、怎么还原',
+  g4t: 'JSONPath 语法速查',
+  g5t: 'JSON ↔ JavaScript：stringify / parse 的坑',
+  g6t: '隐私说明与实现原理',
+  fLead: '关于这个 JSON 解析工具的常见问题。',
+  fq1: '我的 JSON 数据会被上传吗？',
+  fq1a: '不会。所有解析、格式化、修复和查询都在你的浏览器里用 JavaScript 本地完成，输入不会离开你的设备——本站完全没有后端。',
+  fq2: '转义的 JSON 字符串怎么还原成 JSON？',
+  fq2a: '直接粘贴即可，JSON Lens 会自动识别；也可以点「去转义」按钮。它能剥掉外层引号、还原 \\n、\\"、\\\\ 等转义序列，并支持多层转义、URL 编码和 Base64 编码的 JSON。',
+  fq3: '自动修复能修哪些坏 JSON？',
+  fq3a: '单引号、尾逗号、未加引号的键、// 和 /* */ 注释、Python 字面量（True/False/None）、NaN/Infinity、从富文本复制来的中文引号，以及 JSON Lines（每行一个对象，自动包成数组）。',
+  fq4: '怎么查询深层嵌套里的值？',
+  fq4a: '用树上方的 JSONPath 查询栏。例如：$.store.book[0].title、$..author、$.items[?(@.price<10)]。匹配节点会高亮，结果可整体复制为 JSON。',
+  fq5: '有大小限制吗？',
+  fq5a: '没有硬限制。几 MB 以内的输入即时解析；超过 2 MB 会暂停实时解析，改为点「解析」按钮，避免页面卡顿。树节点采用懒加载，展开时才渲染，大文档也流畅。',
+  sub: '粘贴 JSON 或转义过的 JSON 字符串——<b>自动修复</b>搞定单引号、尾逗号与注释，<b>去转义</b>把 <code>"{\\"a\\":1}"</code> 还原成 JSON，<b>分级折叠树</b>配合 JSONPath 查询帮你看清任何结构。<b>全部在浏览器本地运行</b>，数据不上传。',
+  g1: '<p>JSON（RFC 8259）非常严格，下面是最常被违反的规则：</p><ul><li><b>键必须用双引号。</b><code>{name: 1}</code> 和 <code>{\'name\': 1}</code> 都不合法，要写成 <code>{"name": 1}</code>。</li><li><b>不允许尾逗号。</b><code>[1, 2, 3,]</code> 会报错，数组和对象末尾不能有逗号。</li><li><b>字符串只能用双引号</b>，转义只有这几种：<code>\\" \\\\ \\/ \\b \\f \\n \\r \\t \\uXXXX</code>。字符串里的换行必须写成 <code>\\n</code>。</li><li><b>字面量只有三个：</b><code>true</code> / <code>false</code> / <code>null</code>。Python 的 <code>True</code>/<code>None</code>、JS 的 <code>undefined</code>、<code>NaN</code>、<code>Infinity</code> 都不是 JSON。</li><li><b>不支持注释。</b><code>//</code> 和 <code>/* */</code> 都不合法（JSON5/JSONC 才有）。</li><li>数字：不能有前导零（<code>01</code>）、不能是十六进制（<code>0x1F</code>），支持指数（<code>1.5e10</code>）。</li><li>顶层可以是任意值：对象、数组、字符串、数字、<code>true</code>、<code>false</code>、<code>null</code>。</li></ul><p>开启<b>自动修复</b>后，JSON Lens 会修掉这些常见问题，并告诉你改了什么。</p>',
+  g2: '<table><tr><th>报错信息</th><th>常见原因</th><th>修复</th></tr><tr><td><code>Expected property name or \'}\'</code></td><td>键没加引号，或用了单引号</td><td>给键加上双引号——或交给自动修复</td></tr><tr><td><code>Unexpected token \' in JSON</code></td><td>字符串用了单引号</td><td>把 <code>\'…\'</code> 换成 <code>"…"</code>（自动修复可处理）</td></tr><tr><td><code>Unexpected token } … at position N</code></td><td><code>}</code> 或 <code>]</code> 前有尾逗号</td><td>删掉逗号；错误面板里的尖括号会指出位置</td></tr><tr><td><code>Unexpected end of JSON input</code></td><td>JSON 被截断 / 只复制了一半</td><td>检查括号是否配对，重新完整复制</td></tr><tr><td><code>Unexpected token \\n … at line N</code></td><td>字符串里有裸换行或制表符</td><td>写成 <code>\\n</code> / <code>\\t</code></td></tr><tr><td><code>Unexpected token N in JSON</code></td><td>数据里有 <code>NaN</code>、<code>Infinity</code> 或 <code>undefined</code></td><td>改成 <code>null</code>（自动修复会替换）</td></tr><tr><td>看起来没问题但还是报错</td><td>Word/macOS 的中文引号 “ ” ‘ ’、BOM 或零宽字符</td><td>自动修复会统一规范化；用纯文本粘贴</td></tr><tr><td>一行一个对象，多行连在一起</td><td>那是 JSON Lines（NDJSON），不是单个 JSON</td><td>自动修复会把它们包成数组</td></tr></table><p>JSON Lens 会标出错误的<b>行号和列号</b>，打印出错行并用尖括号指示位置，还支持一键修复。</p>',
+  g3: '<p>「转义的 JSON 字符串」是被当成字符串值的 JSON——常见于 <code>JSON.stringify(obj)</code> 嵌在另一个 JSON 里、日志系统、消息队列：</p><pre>"{\\"name\\":\\"Alice\\",\\"tags\\":[\\"a\\",\\"b\\"],\\"ok\\":true}"</pre><p>内部所有引号都加了 <code>\\</code> 前缀，要还原必须对字符串再解析一次。常见来源：</p><ul><li><b>双重序列化的接口</b>——服务端先 stringify 对象，又把整个响应再 stringify 一次。</li><li><b>日志行</b>里 payload 作为字符串字段存储。</li><li><b>shell/curl 输出</b>中带转义引号。</li><li>查询串或令牌里的 <b>URL 编码</b>（<code>%7B%22a%22</code>…）或 <b>Base64 编码</b>（<code>eyJuYW1lIjo…</code>）的 JSON。</li></ul><p>JSON Lens 会自动识别每一层——外层引号、<code>\\n</code>/<code>\\"</code> 转义、URL 编码、Base64——<b>一键剥掉多层转义</b>。「转义」按钮则相反：把你的 JSON 变成可安全嵌入代码或另一个 JSON 的转义字符串。</p><h3>转义序列对照</h3><table><tr><th>序列</th><th>含义</th></tr><tr><td><code>\\"</code></td><td>双引号</td></tr><tr><td><code>\\\\</code></td><td>反斜杠</td></tr><tr><td><code>\\/</code></td><td>正斜杠（可选转义）</td></tr><tr><td><code>\\n \\r \\t</code></td><td>换行、回车、制表符</td></tr><tr><td><code>\\b \\f</code></td><td>退格、换页</td></tr><tr><td><code>\\uXXXX</code></td><td>Unicode 码点（4 位十六进制），如 <code>\\u4e2d</code> = 中</td></tr></table>',
+  g4: '<p>在树上方的查询框输入 JSONPath 后点「查询」。支持的语法：</p><table><tr><th>表达式</th><th>含义</th></tr><tr><td><code>$</code></td><td>根对象</td></tr><tr><td><code>.key</code> 或 <code>[\'key\']</code></td><td>对象成员</td></tr><tr><td><code>[0]</code>、<code>[-1]</code></td><td>数组下标（负数从末尾数）</td></tr><tr><td><code>[0,2]</code></td><td>多个下标</td></tr><tr><td><code>[1:4]</code>、<code>[::2]</code></td><td>数组切片，可带步长</td></tr><tr><td><code>.*</code>、<code>[*]</code></td><td>所有成员 / 元素</td></tr><tr><td><code>..key</code></td><td>递归下降——任意深度的所有 <code>key</code></td></tr><tr><td><code>[?(@.price&lt;10)]</code></td><td>过滤：<code>== != &lt; &lt;= &gt; &gt;=</code>，如 <code>[?(@.type==\'a\')]</code>、<code>[?(@.active)]</code></td></tr></table><pre>$.store.book[*].author        // 所有作者\n$..price                      // 任意深度的所有 price\n$.items[?(@.qty &gt;= 2 &amp; @.id != 9)]</pre><p>结果显示在树下方——点击可跳到对应节点，也可整体复制为 JSON 数组。</p>',
+  g5: '<ul><li><code>JSON.stringify</code> 会丢掉 <code>undefined</code>（对象属性和数组元素）、函数和 Symbol；<code>NaN</code>/<code>Infinity</code> 变成 <code>null</code>。</li><li><code>Date</code> 对象变成 ISO 字符串——再 parse 回来是字符串，不是 Date。</li><li><code>BigInt</code> 直接抛错。用 replacer（<code>BigInt.prototype.toJSON</code> 或转字符串）绕过。</li><li>循环引用会抛 <code>Converting circular structure to JSON</code>——用记录已见对象的 replacer。</li><li>键顺序：按插入序保留（整数型键靠前且升序）；parse 不会打乱这个规则。</li><li><code>JSON.parse</code> 对超长数字丢精度（<code>9007199254740993</code> 变成 …992）——ID 类大数在服务端就用字符串。</li><li>重复键：静默取最后一个。</li><li><code>-0</code>、稀疏数组、<code>toJSON()</code> 副作用都容易踩坑；调试时建议用树视图，它展示的就是实际解析结果。</li></ul>',
+  g6: '<p><b>你的数据不会离开浏览器。</b>本站没有后端：解析、修复、去转义、JSONPath 查询全部是本地 JavaScript。页面没有外部脚本、没有 Cookie，也不会记录你的输入——可以放心粘贴含 token 的接口响应（注意分享链接本身在 URL 里携带数据，请有意再分享）。</p><p>实现原理：输入先用原生 <code>JSON.parse</code> 做严格校验；失败后按层尝试字符串去转义（外层引号 → <code>\\n</code>/<code>\\"</code> → URL → Base64），再做定向修复（引号、逗号、注释、字面量），并报告每一处修改。树节点懒渲染，大文档也流畅——超过 2 MB 时暂停实时解析，改为点「解析」按钮。</p>',
+};
+
+let LANG = 'en';
+const t = k => (LANG === 'zh' ? (ZH[k] ?? EN[k]) : EN[k]) ?? k;
+const posStr = (l, c) => LANG === 'zh' ? `第 ${l} 行，第 ${c} 列` : `line ${l}, col ${c}`;
+
+/* ================= theme ================= */
+const THEME_KEY = 'jl_theme', LANG_KEY = 'jl_lang', DRAFT_KEY = 'jl_draft';
+const mq = matchMedia('(prefers-color-scheme: dark)');
+let themeMode = localStorage.getItem(THEME_KEY) || 'auto';
+function applyTheme() {
+  const m = themeMode === 'auto' ? (mq.matches ? 'dark' : 'light') : themeMode;
+  document.documentElement.setAttribute('data-theme', m);
+  $('#btnTheme').textContent = themeMode === 'auto' ? '◐' : themeMode === 'light' ? '☀' : '☾';
+  $('#btnTheme').title = `Theme: ${themeMode}`;
+}
+mq.addEventListener('change', () => { if (themeMode === 'auto') applyTheme(); });
+$('#btnTheme').onclick = () => {
+  themeMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
+  localStorage.setItem(THEME_KEY, themeMode); applyTheme();
+};
+
+/* ================= language ================= */
+function setLang(l) {
+  LANG = l;
+  localStorage.setItem(LANG_KEY, l);
+  document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+  document.title = t('title');
+  const md = $('meta[name="description"]'); if (md) md.setAttribute('content', t('desc'));
+  $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  $$('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  $$('[data-rich]').forEach(el => { if (!el._en) el._en = el.innerHTML; el.innerHTML = l === 'zh' ? t(el.dataset.rich) : el._en; });
+  $('#btnLang').textContent = l === 'zh' ? 'EN' : '中文';
+  renderDynamic();
+}
+$('#btnLang').onclick = () => {
+  setLang(LANG === 'zh' ? 'en' : 'zh');
+  const u = new URL(location.href);
+  if (LANG === 'zh') u.searchParams.set('lang', 'zh'); else u.searchParams.delete('lang');
+  history.replaceState(null, '', u);
+};
+
+/* ================= utils ================= */
+function fmtBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(2) + ' MB';
+}
+function fmtNum(n) { return n.toLocaleString('en-US'); }
+let toastH;
+function toast(msg) {
+  const el = $('#toast'); el.textContent = msg; el.hidden = false;
+  clearTimeout(toastH); toastH = setTimeout(() => { el.hidden = true; }, 2200);
+}
+async function copyText(txt, msg) {
+  try { await navigator.clipboard.writeText(txt); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (_) {}
+    ta.remove();
+  }
+  toast(msg || t('copied'));
+}
+function download(name, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ================= editor & gutter ================= */
+const inEl = $('#in'), gutterEl = $('#gutter');
+const utf8Len = s => new TextEncoder().encode(s).length;
+function syncGutter() {
+  const lines = inEl.value.split('\n').length;
+  const parts = [];
+  for (let i = 1; i <= lines; i++) parts.push('<div data-ln="' + i + '">' + i + '</div>');
+  gutterEl.innerHTML = parts.join('') || '<div>1</div>';
+  markLines();
+  gutterEl.scrollTop = inEl.scrollTop;
+  $('#inStats').textContent = inEl.value ? fmtBytes(utf8Len(inEl.value)) : '0 B';
+}
+function markLines() {
+  const errLn = S.error?.line || 0;
+  let cur = 0;
+  const upto = inEl.value.slice(0, inEl.selectionStart);
+  cur = upto.split('\n').length;
+  gutterEl.querySelectorAll('div').forEach(d => {
+    const ln = +d.dataset.ln;
+    d.className = ln === errLn ? 'errline' : ln === cur ? 'cur' : '';
+  });
+}
+inEl.addEventListener('scroll', () => { gutterEl.scrollTop = inEl.scrollTop; });
+inEl.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const ind = $('#selIndent').value === 'tab' ? '\t' : ' '.repeat(+$('#selIndent').value);
+    const s = inEl.selectionStart, epos = inEl.selectionEnd;
+    inEl.setRangeText(ind, s, epos, 'end');
+    onInput();
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); doFormat(); }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'm') { e.preventDefault(); doMinify(); }
+});
+
+/* ================= app state ================= */
+const S = {
+  data: undefined,        // parsed value
+  error: null,            // {msg, line, col, snippet, caretOff, hint}
+  fixes: [],              // repair/unescape descriptions
+  layers: 0,              // unescape layers removed
+  repaired: false, unescaped: false, strict: false,
+  parseMs: 0,
+  bigMode: false,         // > 2MB → manual parse
+  lastGoodRaw: '',        // original text of last successful parse (for undo-fixes)
+  stats: null,
+  view: 'tree',
+  jpResults: null,
+  qMatches: [], qIdx: -1,
+};
+/* ================= unescape ================= */
+const looksJson = s => { s = s.trimStart(); return s.startsWith('{') || s.startsWith('[') || (s.startsWith('"') && s.length > 4); };
+function unescapeBackslash(s) {
+  let out = '', i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === '\\' && i + 1 < s.length) {
+      const n = s[i + 1];
+      if (n === '"') { out += '"'; i += 2; }
+      else if (n === '\\') { out += '\\'; i += 2; }
+      else if (n === '/') { out += '/'; i += 2; }
+      else if (n === 'n') { out += '\n'; i += 2; }
+      else if (n === 't') { out += '\t'; i += 2; }
+      else if (n === 'r') { out += '\r'; i += 2; }
+      else if (n === 'b') { out += '\b'; i += 2; }
+      else if (n === 'f') { out += '\f'; i += 2; }
+      else if (n === "'") { out += "'"; i += 2; }
+      else if (n === 'u' && /^[0-9a-fA-F]{4}$/.test(s.slice(i + 2, i + 6))) { out += String.fromCharCode(parseInt(s.slice(i + 2, i + 6), 16)); i += 6; }
+      else { out += c; i++; }
+    } else { out += c; i++; }
+  }
+  return out;
+}
+function unescapeOnce(raw) {
+  const s = raw.trim();
+  if (!s) return null;
+  if (s[0] === '"' && s[s.length - 1] === '"' && s.length > 1) {
+    try { const v = JSON.parse(s); if (typeof v === 'string' && looksJson(v)) return { text: v, how: 'quotes' }; } catch (e) {}
+  }
+  if (s[0] === "'" && s[s.length - 1] === "'" && s.length > 1) {
+    const v = unescapeBackslash(s.slice(1, -1));
+    if (looksJson(v)) return { text: v, how: 'quotes' };
+  }
+  if (/\\["\\\/bfnrtu]/.test(s)) {
+    let parses = false;
+    try { JSON.parse(s); parses = true; } catch (e) {}
+    if (!parses) {
+      const u = unescapeBackslash(s);
+      if (looksJson(u)) return { text: u, how: 'backslash' };
+    }
+  }
+  if (/%[0-9A-Fa-f]{2}/.test(s)) {
+    try { const d = decodeURIComponent(s); if (looksJson(d)) return { text: d, how: 'url' }; } catch (e) {}
+  }
+  const b64 = s.replace(/\s+/g, '');
+  if (b64.length >= 12 && /^[A-Za-z0-9+/]+=*$/.test(b64) && b64.length % 4 === 0) {
+    try {
+      const bin = atob(b64);
+      const d = new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+      if (looksJson(d)) return { text: d, how: 'base64' };
+    } catch (e) {}
+  }
+  return null;
+}
+function unescapeLoop(raw, max = 10) {
+  let cur = raw, layers = 0; const hows = [];
+  while (layers < max) {
+    const u = unescapeOnce(cur);
+    if (!u) break;
+    if (u.text === cur) break;
+    cur = u.text; layers++;
+    if (!hows.includes(u.how)) hows.push(u.how);
+  }
+  return layers ? { text: cur, layers, hows } : null;
+}
+const HOW_LABEL = {
+  quotes: { en: 'string quotes & escapes', zh: '字符串引号与转义' },
+  backslash: { en: 'backslash escapes', zh: '反斜杠转义' },
+  url: { en: 'URL encoding', zh: 'URL 编码' },
+  base64: { en: 'Base64', zh: 'Base64' },
+};
+const howLabel = k => (LANG === 'zh' ? HOW_LABEL[k].zh : HOW_LABEL[k].en);
+
+/* ================= repair ================= */
+const FIX = {
+  bom: { en: 'BOM / invisible characters removed', zh: '已移除 BOM / 不可见字符' },
+  smart: { en: 'smart quotes “”‘’ normalized', zh: '已规范化中文引号 “”‘’' },
+  cm: { en: '// and /* */ comments stripped', zh: '已移除 // 与 /* */ 注释' },
+  sq: { en: "single quotes → double quotes", zh: '单引号 → 双引号' },
+  uk: { en: 'unquoted keys quoted', zh: '已为未加引号的键补上引号' },
+  tc: { en: 'trailing commas removed', zh: '已移除尾逗号' },
+  py: { en: 'True/False/None → true/false/null', zh: 'True/False/None → true/false/null' },
+  lit: { en: 'NaN/Infinity/undefined → null', zh: 'NaN/Infinity/undefined → null' },
+  bs: { en: 'invalid escapes fixed (e.g. "C:\\Users")', zh: '已修复非法转义（如 "C:\\Users"）' },
+  jsonl: { en: 'JSON Lines wrapped into an array', zh: 'JSON Lines 已包装为数组' },
+};
+const fixDesc = k => (LANG === 'zh' ? FIX[k].zh : FIX[k].en);
+
+function stripInvisible(t0) {
+  return t0.replace(/^\uFEFF/, '').replace(/[\u200B-\u200D\u2060\uFEFF]/g, '');
+}
+function stripComments(t0) {
+  let out = '', q = null;
+  for (let i = 0; i < t0.length; i++) {
+    const c = t0[i];
+    if (q) { out += c; if (c === '\\') { out += t0[i + 1] || ''; i++; } else if (c === q) q = null; continue; }
+    if (c === '"' || c === "'") { q = c; out += c; continue; }
+    if (c === '/' && t0[i + 1] === '/') { while (i < t0.length && t0[i] !== '\n') i++; continue; }
+    if (c === '/' && t0[i + 1] === '*') { i += 2; while (i < t0.length && !(t0[i] === '*' && t0[i + 1] === '/')) i++; i++; continue; }
+    out += c;
+  }
+  return out;
+}
+function fixQuotes(t0) {
+  let out = '', q = null, i = 0;
+  while (i < t0.length) {
+    const c = t0[i];
+    if (q) { out += c; if (c === '\\') { out += t0[i + 1] || ''; i += 2; continue; } if (c === q) q = null; i++; continue; }
+    if (c === '"') { q = '"'; out += c; i++; continue; }
+    if (c === "'") {
+      let j = i + 1, inner = '';
+      while (j < t0.length) {
+        if (t0[j] === '\\') { inner += t0[j] + (t0[j + 1] || ''); j += 2; continue; }
+        if (t0[j] === "'" || t0[j] === '\n') break;
+        inner += t0[j]; j++;
+      }
+      if (j < t0.length && t0[j] === "'") { out += '"' + inner.replace(/"/g, '\\"') + '"'; i = j + 1; continue; }
+      out += c; i++; continue;
+    }
+    out += c; i++;
+  }
+  return out;
+}
+function fixUnquotedKeys(t0) {
+  const re = /[A-Za-z_$][\w$]*\s*:/y;
+  let out = '', q = null, i = 0;
+  while (i < t0.length) {
+    const c = t0[i];
+    if (q) { out += c; if (c === '\\') { out += t0[i + 1] || ''; i += 2; continue; } if (c === q) q = null; i++; continue; }
+    if (c === '"') { q = '"'; out += c; i++; continue; }
+    if (c === '{' || c === ',') {
+      let j = i + 1;
+      while (j < t0.length && /\s/.test(t0[j])) j++;
+      re.lastIndex = j;
+      const m = re.exec(t0);
+      if (m && m.index === j) {
+        const raw = m[0];
+        const colonAt = raw.search(/\s*:/);
+        const name = raw.slice(0, colonAt).trimEnd();
+        out += c + t0.slice(i + 1, j) + '"' + name + '"' + raw.slice(colonAt);
+        i = j + raw.length;
+        continue;
+      }
+    }
+    out += c; i++;
+  }
+  return out;
+}
+function fixTrailingCommas(t0) {
+  let out = '', q = null;
+  for (let i = 0; i < t0.length; i++) {
+    const c = t0[i];
+    if (q) { out += c; if (c === '\\') { out += t0[i + 1] || ''; i++; } else if (c === q) q = null; continue; }
+    if (c === '"' || c === "'") { q = c; out += c; continue; }
+    if (c === ',') {
+      let j = i + 1;
+      while (j < t0.length && /\s/.test(t0[j])) j++;
+      if (t0[j] === '}' || t0[j] === ']') continue;
+    }
+    out += c;
+  }
+  return out;
+}
+function fixLiterals(t0) {
+  const map = { True: 'true', False: 'false', None: 'null', undefined: 'null', NaN: 'null', Infinity: 'null', '-Infinity': 'null' };
+  let out = '', q = null, i = 0; const hit = new Set();
+  while (i < t0.length) {
+    const c = t0[i];
+    if (q) { out += c; if (c === '\\') { out += t0[i + 1] || ''; i += 2; continue; } if (c === q) q = null; i++; continue; }
+    if (c === '"') { q = '"'; out += c; i++; continue; }
+    if (/[A-Za-z_]/.test(c) || (c === '-' && t0[i + 1] === 'I')) {
+      let j = c === '-' ? i + 1 : i;
+      while (j < t0.length && /[\w$]/.test(t0[j])) j++;
+      const word = t0.slice(i, j);
+      if (map[word] !== undefined) { out += map[word]; hit.add(word === 'True' || word === 'False' || word === 'None' ? 'py' : 'lit'); }
+      else out += word;
+      i = j; continue;
+    }
+    out += c; i++;
+  }
+  return { text: out, hit: [...hit] };
+}
+function fixEscapes(t0) {
+  let out = '', q = null;
+  for (let i = 0; i < t0.length; i++) {
+    const c = t0[i];
+    if (q) {
+      if (c === '\\') {
+        const n = t0[i + 1];
+        if (n && /["\\\/bfnrtu']/.test(n)) { out += c + n; i++; }
+        else out += '\\\\';
+        continue;
+      }
+      out += c; if (c === q) q = null; continue;
+    }
+    if (c === '"') q = '"';
+    out += c;
+  }
+  return out;
+}
+function tryJsonl(t0) {
+  const lines = t0.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) {
+    const m = t0.trim();
+    if (!/^\{[\s\S]*\}\s*\{/.test(m)) return null;
+    const wrapped = '[' + m.replace(/\}\s*\{/g, '},{') + ']';
+    try { JSON.parse(wrapped); return wrapped; } catch (e) { return null; }
+  }
+  for (const l of lines) { try { JSON.parse(l); } catch (e) { return null; } }
+  return '[\n' + lines.join(',\n') + '\n]';
+}
+function repair(t0) {
+  const fixes = [];
+  let x = stripInvisible(t0);
+  if (x !== t0) fixes.push('bom');
+  if (/[\u201C\u201D\u2018\u2019\u201A\u201E]/.test(x)) { x = x.replace(/[\u201C\u201D\u201A\u201E]/g, '"').replace(/[\u2018\u2019]/g, "'"); fixes.push('smart'); }
+  const nc = stripComments(x); if (nc !== x) { x = nc; fixes.push('cm'); }
+  const fq = fixQuotes(x); if (fq !== x) { x = fq; fixes.push('sq'); }
+  const uk = fixUnquotedKeys(x); if (uk !== x) { x = uk; fixes.push('uk'); }
+  const tc = fixTrailingCommas(x); if (tc !== x) { x = tc; fixes.push('tc'); }
+  const fl = fixLiterals(x); if (fl.text !== x) { x = fl.text; fl.hit.forEach(h => fixes.push(h)); }
+  const fe = fixEscapes(x); if (fe !== x) { x = fe; fixes.push('bs'); }
+  try { JSON.parse(x); return { text: x, fixes }; } catch (e) {}
+  const jl = tryJsonl(x);
+  if (jl) { fixes.push('jsonl'); return { text: jl, fixes }; }
+  return null;
+}
+
+/* ================= error position & hints ================= */
+function errorPos(msg, text) {
+  let m = /line (\d+) column (\d+)/i.exec(msg);
+  if (m) return { line: Math.min(+m[1], text.split('\n').length), col: +m[2] };
+  m = /position (\d+)/i.exec(msg);
+  if (m) {
+    const off = Math.min(+m[1], text.length);
+    const before = text.slice(0, off);
+    const line = before.split('\n').length;
+    const col = off - before.lastIndexOf('\n');
+    return { line, col, off };
+  }
+  return null;
+}
+function hintList(msg, text, pos) {
+  const near = pos ? text.split('\n')[pos.line - 1] || '' : '';
+  const hints = [];
+  if (/['’‘]/.test(near)) hints.push(LANG === 'zh' ? '检测到单引号 — 可开启/使用自动修复' : "Single quotes detected — auto-repair can convert them");
+  if (/[\u201C\u201D]/.test(near)) hints.push(LANG === 'zh' ? '检测到中文引号 “ ”（可能来自富文本）' : 'Smart quotes detected (copied from rich text?)');
+  if (/,\s*[}\]]/.test(near)) hints.push(LANG === 'zh' ? '疑似尾逗号 — } 或 ] 前多了一个逗号' : 'Trailing comma before } or ]');
+  if (/Expected property name|Expected double-quoted/.test(msg)) hints.push(LANG === 'zh' ? '对象的键必须用双引号' : 'Object keys must be double-quoted');
+  if (/NaN|Infinity|undefined|\bTrue\b|\bFalse\b|\bNone\b/.test(near)) hints.push(LANG === 'zh' ? '包含非 JSON 字面量（True/None/NaN/undefined）— 自动修复可转换' : 'Non-JSON literals (True/None/NaN/undefined) — auto-repair converts them');
+  if (/Bad escaped|Invalid.*\\/.test(msg) || /\\[\w]/.test(near)) hints.push(LANG === 'zh' ? '字符串里有非法转义（如 Windows 路径 C:\\Users）— 自动修复可处理' : 'Invalid escape in string (e.g. Windows path) — auto-repair can fix');
+  if (/end of JSON input|Unexpected end/.test(msg)) hints.push(LANG === 'zh' ? '输入不完整 — 括号可能没有闭合，或只复制了一部分' : 'Input is incomplete — some brackets may be unclosed');
+  return [...new Set(hints)].slice(0, 2);
+}
+function errSnippet(text, line, col) {
+  const ln = text.split('\n')[line - 1];
+  if (ln == null) return null;
+  const w = Math.max(0, col - 1);
+  const cut = Math.max(0, w - 60);
+  const txt = ln.length > 170 ? (cut > 0 ? '…' : '') + ln.slice(cut, w + 100) + '…' : ln;
+  const caret = ' '.repeat(Math.min(w - cut, txt.length)) + '^';
+  return { txt, caret };
+}
+
+/* ================= parse pipeline ================= */
+function runPipeline(rawText) {
+  const res = { ok: false, data: undefined, strict: false, layers: 0, hows: [], fixes: [], finalText: null, rootStr: false, error: null };
+  let firstErr = null;
+  try { res.data = JSON.parse(rawText); res.ok = true; res.strict = true; }
+  catch (e) { firstErr = e.message; }
+  if (res.ok && typeof res.data === 'string' && looksJson(res.data)) {
+    let cur = res.data, n = 0;
+    while (n < 10) {
+      let v;
+      try { v = JSON.parse(cur); } catch (e) { break; }
+      n++;
+      if (typeof v === 'string' && looksJson(v)) { cur = v; continue; }
+      res.data = v; res.layers = n; res.hows = ['quotes']; res.rootStr = true;
+      return finish(res);
+    }
+  }
+  if (res.ok) return finish(res);
+  if (!rawText.trim()) { res.error = null; return res; }
+  const u = unescapeLoop(rawText);
+  if (u) {
+    try { res.data = JSON.parse(u.text); res.ok = true; res.layers = u.layers; res.hows = u.hows; res.finalText = u.text; return finish(res); } catch (e) {}
+    const r = repair(u.text);
+    if (r) { try { res.data = JSON.parse(r.text); res.ok = true; res.layers = u.layers; res.hows = u.hows; res.fixes = r.fixes; res.finalText = u.text; return finish(res); } catch (e) {} }
+  }
+  const r = repair(rawText);
+  if (r) { try { res.data = JSON.parse(r.text); res.ok = true; res.fixes = r.fixes; res.finalText = r.text; return finish(res); } catch (e) {} }
+  const pos = firstErr ? errorPos(firstErr, rawText) : null;
+  res.error = {
+    msg: firstErr || 'Unknown error',
+    line: pos?.line || 0, col: pos?.col || 0, off: pos?.off ?? null,
+    hints: firstErr ? hintList(firstErr, rawText, pos) : [],
+  };
+  return res;
+
+  function finish(r) {
+    r.parseMs = 0;
+    return r;
+  }
+}
+
+/* ================= stats ================= */
+function computeStats(data) {
+  const st = { depth: 0, nodes: 0, objects: 0, arrays: 0, strings: 0, numbers: 0, bools: 0, nulls: 0, maxArr: 0 };
+  const CAP = 2000000;
+  (function walk(v, d) {
+    if (st.nodes > CAP) return;
+    st.nodes++; if (d > st.depth) st.depth = d;
+    if (v === null) { st.nulls++; return; }
+    if (Array.isArray(v)) { st.arrays++; if (v.length > st.maxArr) st.maxArr = v.length; for (const x of v) walk(x, d + 1); return; }
+    switch (typeof v) {
+      case 'object': st.objects++; for (const k in v) walk(v[k], d + 1); break;
+      case 'string': st.strings++; break;
+      case 'number': st.numbers++; break;
+      case 'boolean': st.bools++; break;
+    }
+  })(data, 1);
+  return st;
+}
+
+/* ================= status & banners ================= */
+const errBanner = $('#errBanner'), fixBanner = $('#fixBanner'), stDot = $('#stDot'), stTxt = $('#stTxt');
+const srcBadge = $('#srcBadge'), fixBadge = $('#fixBadge');
+function renderStatus() {
+  const hasText = inEl.value.length > 0;
+  $('#btnParseBig').hidden = !(S.bigMode && hasText);
+  if (!hasText) { stDot.className = 'dot'; stTxt.textContent = t('stIdle'); srcBadge.hidden = true; fixBadge.hidden = true; return; }
+  if (S.bigMode && S.data === undefined && !S.error) { stTxt.textContent = t('stManual'); return; }
+  if (S.data !== undefined) {
+    stDot.className = 'dot ok';
+    const d = LANG === 'zh'
+      ? `${t('stValid')} · ${fmtBytes(S.bytes)} · 深度 ${S.stats.depth} · ${fmtNum(S.stats.nodes)} 节点 · ${S.parseMs.toFixed(1)} ms`
+      : `${t('stValid')} · ${fmtBytes(S.bytes)} · depth ${S.stats.depth} · ${fmtNum(S.stats.nodes)} nodes · ${S.parseMs.toFixed(1)} ms`;
+    stTxt.textContent = d;
+  } else if (S.error) {
+    stDot.className = 'dot err';
+    stTxt.textContent = S.error.line ? `${t('stInvalid')} — ${posStr(S.error.line, S.error.col)}` : t('stInvalid');
+  }
+  const tags = [];
+  if (S.layers) tags.push(`${t('bUnesc')} ×${S.layers}`);
+  if (S.fixes.length) tags.push(`${t('bRep')} ×${S.fixes.length}`);
+  if (S.strict && !S.layers && !S.fixes.length) tags.push(t('bStrict'));
+  if (tags.length) { srcBadge.hidden = false; srcBadge.textContent = tags.join(' · '); fixBadge.hidden = false; fixBadge.textContent = tags.join(' · '); }
+  else { srcBadge.hidden = true; fixBadge.hidden = true; }
+}
+function renderBanners() {
+  if (S.error) {
+    const e = S.error;
+    const sn = e.line ? errSnippet(inEl.value, e.line, e.col) : null;
+    errBanner.innerHTML =
+      `<div class="btitle">✗ ${escH(t('errHead'))}${e.line ? ' — ' + escH(posStr(e.line, e.col)) : ''}</div>` +
+      `<div class="bhint" style="font-family:var(--mono);font-size:11.5px">${escH(e.msg)}</div>` +
+      e.hints.map(h => `<div class="bhint">💡 ${escH(h)}</div>`).join('') +
+      (sn ? `<pre>${escH(sn.txt)}\n<span class="caret">${escH(sn.caret)}</span></pre>` : '') +
+      `<div class="bact"><button class="bbtn" data-act="jump">${escH(t('jump'))}</button><button class="bbtn" data-act="fix">${escH(t('tryRepair'))}</button></div>`;
+    errBanner.hidden = false;
+  } else errBanner.hidden = true;
+  const items = [];
+  if (S.rootStr) items.push((LANG === 'zh' ? '输入是转义的 JSON 字符串，已自动还原' : 'Input was an escaped JSON string — unwrapped automatically'));
+  if (S.layers) items.push((LANG === 'zh' ? `剥离 ${S.layers} 层转义（` : `Removed ${S.layers} escape layer(s) (`) + S.hows.map(howLabel).join(', ') + ')');
+  S.fixes.forEach(f => items.push(escH(fixDesc(f))));
+  if (S.finalText || S.rootStr) {
+    fixBanner.innerHTML =
+      `<div class="btitle">✓ ${escH(t('fixedHead'))}</div>` +
+      items.map(i => `<div class="bhint">· ${i}</div>`).join('') +
+      `<div class="bact"><button class="bbtn" data-act="usefix">${escH(S.rootStr && !S.finalText ? (LANG === 'zh' ? '采用还原后文本' : 'Use unwrapped text') : (LANG === 'zh' ? '采用修复后文本' : 'Use fixed text'))}</button>` +
+      `<button class="bbtn" data-act="copyfix">${escH(LANG === 'zh' ? '复制修复后 JSON' : 'Copy fixed JSON')}</button>` +
+      (S.rootStr || S.finalText ? `<button class="bbtn" data-act="useorig">${escH(S.rootStr ? (LANG === 'zh' ? '还原为原始字符串' : 'Use original string') : (LANG === 'zh' ? '还原原始输入' : 'Restore original input'))}</button>` : '') +
+      `</div>`;
+    fixBanner.hidden = false;
+  } else fixBanner.hidden = true;
+}
+errBanner.addEventListener('click', e => {
+  const act = e.target.dataset.act;
+  if (act === 'jump') jumpToError();
+  if (act === 'fix') forceRepair();
+});
+fixBanner.addEventListener('click', e => {
+  const act = e.target.dataset.act;
+  if (act === 'usefix' && S.finalText) { inEl.value = S.finalText; onInputNow(); }
+  else if (act === 'copyfix') copyText(S.finalText ?? inEl.value);
+  else if (act === 'useorig') { inEl.value = S.origText ?? ''; onInputNow(); }
+});
+function jumpToError() {
+  const e = S.error; if (!e) return;
+  let off = e.off;
+  if (off == null && e.line) {
+    const lines = inEl.value.split('\n');
+    off = lines.slice(0, e.line - 1).reduce((a, l) => a + l.length + 1, 0) + Math.max(0, e.col - 1);
+  }
+  if (off == null) return;
+  inEl.focus();
+  inEl.setSelectionRange(off, Math.min(off + 1, inEl.value.length));
+  markLines();
+}
+function forceRepair() {
+  const r = repair(inEl.value);
+  if (!r) { toast(LANG === 'zh' ? '无法自动修复 — 请检查错误位置' : 'Could not auto-repair — check the error position'); return; }
+  try {
+    S.data = JSON.parse(r.text); S.ok = true; S.fixes = r.fixes; S.finalText = r.text; S.error = null;
+    afterParse(inEl.value, S);
+    renderAll();
+  } catch (e) { toast(LANG === 'zh' ? '无法自动修复 — 请检查错误位置' : 'Could not auto-repair — check the error position'); }
+}
+
+/* ================= main input flow ================= */
+function afterParse(rawText, res) {
+  S.bytes = utf8Len(rawText);
+  const t0 = performance.now();
+  S.stats = computeStats(S.data);
+  S.parseMs = performance.now() - t0;
+  S.origText = rawText;
+}
+function applyResult(res) {
+  S.data = res.data; S.error = res.error ?? null; S.strict = res.strict;
+  S.layers = res.layers; S.hows = res.hows; S.fixes = res.fixes;
+  S.finalText = res.finalText; S.rootStr = res.rootStr;
+  if (res.ok) afterParse(inEl.value, res);
+  renderAll();
+}
+function parseNow() {
+  const raw = inEl.value;
+  if (!raw.trim()) { S.data = undefined; S.error = null; S.layers = 0; S.hows = []; S.fixes = []; S.strict = false; S.finalText = null; S.rootStr = false; S.origText = ''; renderAll(); return; }
+  applyResult(runPipeline(raw));
+}
+const scheduleParse = debounce(() => { if (!S.bigMode) parseNow(); }, 350);
+function onInputNow() { syncGutter(); saveDraft(); parseNow(); }
+function onInput() {
+  S.bigMode = inEl.value.length > 2000000;
+  syncGutter(); saveDraft();
+  if (S.bigMode) {
+    if (S.data !== undefined || S.error) {
+      S.data = undefined; S.error = null; S.layers = 0; S.hows = []; S.fixes = []; S.strict = false; S.finalText = null; S.rootStr = false;
+      renderAll();
+    } else renderStatus();
+    return;
+  }
+  scheduleParse();
+}
+const saveDraft = debounce(() => { try { localStorage.setItem(DRAFT_KEY, inEl.value); } catch (e) {} }, 600);
+inEl.addEventListener('input', onInput);
+inEl.addEventListener('keyup', markLines);
+inEl.addEventListener('click', markLines);
+$('#btnParseBig').onclick = () => parseNow();
+/* ================= tree view ================= */
+const treeEl = $('#tree');
+const CHUNK = 1000;
+const curExpandDepth = () => +$('#selExpand').value;
+function pathToStr(path) {
+  if (!path.length) return '$';
+  const style = $('#selPath').value;
+  if (style === 'js') {
+    return path.reduce((acc, k) => typeof k === 'number' ? `${acc}[${k}]`
+      : /^[A-Za-z_$][\w$]*$/.test(k) ? (acc ? `${acc}.${k}` : k) : `${acc}[${JSON.stringify(k)}]`, '');
+  }
+  if (style === 'py') return path.reduce((acc, k) => `${acc}[${JSON.stringify(k)}]`, '');
+  return path.reduce((acc, k) => typeof k === 'number' ? `${acc}[${k}]`
+    : /^[A-Za-z_$][\w$]*$/.test(k) ? `${acc}.${k}` : `${acc}[${JSON.stringify(k)}]`, '$');
+}
+function childEntries(v) { return Array.isArray(v) ? v.map((x, i) => [i, x]) : Object.entries(v); }
+function shortStr(s) { return JSON.stringify(s.length > 60 ? s.slice(0, 60) + '…' : s); }
+function previewList(val) {
+  const n = Array.isArray(val) ? val.length : Object.keys(val).length;
+  return childEntries(val).slice(0, 3).map(([, x]) => {
+    if (x === null) return 'null';
+    if (Array.isArray(x)) return '[…]';
+    if (typeof x === 'object') return '{…}';
+    if (typeof x === 'string') return shortStr(x);
+    return String(x);
+  }).join(', ');
+}
+function buildNode(key, val, path, depth) {
+  const node = document.createElement('div');
+  node.className = 'tnode';
+  node._val = val; node._path = path; node._depth = depth;
+  const row = document.createElement('div');
+  row.className = 'trow';
+  row.dataset.path = pathToStr(path);
+  node.appendChild(row);
+  const isC = val !== null && typeof val === 'object';
+  const q = S.qQuery;
+  const selfHit = q && ((key !== null && String(key).toLowerCase().includes(q)) ||
+    (!isC && val !== null && String(val).toLowerCase().includes(q)));
+  if (selfHit) row.classList.add('hit');
+  let html = '';
+  if (key !== null) html += `<span class="tk">${escH(JSON.stringify(key))}</span><span class="tp">: </span>`;
+  if (isC) {
+    const isArr = Array.isArray(val);
+    const n = isArr ? val.length : Object.keys(val).length;
+    const open = depth < curExpandDepth() && n > 0 && n <= 2000;    html += `<span class="tw" role="button" aria-label="toggle">▶</span><span class="tp">${isArr ? '[' : '{'}</span>`;
+    if (!open && n > 0) html += `<span class="tprev">${escH(previewList(val))}${n > 3 ? ', …' : ''}</span><span class="tp">…${isArr ? ']' : '}'}</span>`;
+    else html += `<span class="tp">${isArr ? ']' : '}'}</span>`;
+    html += `<span class="tmeta">${isArr ? fmtNum(n) + (LANG === 'zh' ? ' 项' : ' items') : fmtNum(n) + (LANG === 'zh' ? ' 个键' : ' keys')}</span>`;
+  } else {
+    html += `<span class="tw leaf">▶</span>`;
+    const cls = val === null ? 'tnull' : typeof val === 'string' ? 'tstr' : typeof val === 'number' ? 'tnum' : 'tbool';
+    const show = val === null ? 'null' : typeof val === 'string' ? JSON.stringify(val.length > 120 ? val.slice(0, 120) + '…' : val) : String(val);
+    html += `<span class="tv ${cls}" title="${escH(t('copyValT'))}" data-full="${escH(val === null ? 'null' : String(val))}">${escH(show)}</span>`;
+  }
+  row.innerHTML = html;
+  const qa = document.createElement('span');
+  qa.className = 'qa';
+  qa.innerHTML = `<button data-a="path" title="${escH(t('copyPathT'))}">path</button><button data-a="val" title="${escH(t('copyValT'))}">val</button>`;
+  row.appendChild(qa);
+  if (isC) {
+    const kids = document.createElement('div');
+    kids.className = 'tkids'; kids.hidden = true;
+    node.appendChild(kids);
+    if (open) fillKids(node);
+    row.querySelector('.tw').addEventListener('click', ev => { ev.stopPropagation(); toggleNode(node); });
+    row.querySelector('.tprev')?.addEventListener('click', ev => { ev.stopPropagation(); toggleNode(node); });
+  }
+  row.addEventListener('click', ev => {
+    if (ev.target.closest('.qa') || ev.target.classList.contains('tw')) return;
+    if (ev.target.classList.contains('tv')) { copyText(ev.target.dataset.full); return; }
+    if (!isC) return;
+    copyText(row.dataset.path);
+  });
+  return node;
+}
+function fillKids(node) {
+  const kids = node.querySelector('.tkids');
+  if (!node._built) { node._offset = 0; node._built = true; }
+  const entries = childEntries(node._val);
+  const end = Math.min(node._offset + CHUNK, entries.length);
+  const frag = document.createDocumentFragment();
+  for (let i = node._offset; i < end; i++) {
+    const [k, x] = entries[i];
+    frag.appendChild(buildNode(k, x, [...node._path, k], node._depth + 1));
+  }
+  node._offset = end;
+  kids.querySelector('.more')?.remove();
+  if (end < entries.length) {
+    const more = document.createElement('div');
+    more.className = 'trow more';
+    more.innerHTML = `<span class="tmeta" role="button">⋯ ${escH(fmtNum(entries.length - end))} ${LANG === 'zh' ? '更多' : 'more'}</span>`;
+    more.addEventListener('click', ev => { ev.stopPropagation(); fillKids(node); });
+    kids.appendChild(more);
+  }
+  kids.appendChild(frag);
+  kids.hidden = false;
+}
+function toggleNode(node) {
+  const kids = node.querySelector('.tkids');
+  if (!kids) return;
+  if (node.classList.contains('open')) { node.classList.remove('open'); kids.hidden = true; return; }
+  fillKids(node);
+  node.classList.add('open');
+}
+function buildTree() {
+  treeEl.innerHTML = '';
+  if (S.data === undefined) {
+    treeEl.innerHTML = `<div style="color:var(--faint);padding:24px 10px;font-family:var(--sans);font-size:13px">${escH(t('treeEmpty'))}</div>`;
+    return;
+  }
+  treeEl.appendChild(buildNode(null, S.data, [], 1));
+  if (S.bigMode && S.stats && S.stats.nodes > 200000) toast(t('parseBig'));
+}
+function expandTo(level) {
+  if (level >= 99 && S.stats && S.stats.nodes > 30000) { toast(t('expWarn')); level = 3; }
+  const root = treeEl.querySelector(':scope > .tnode'); if (!root) return;
+  collapseAll();
+  const stack = [root];
+  while (stack.length) {
+    const n = stack.pop();
+    if (n._depth >= level) continue;
+    if (!n.classList.contains('open')) toggleNode(n);
+    if (n._depth + 1 < level) n.querySelectorAll(':scope > .tkids > .tnode').forEach(ch => {
+      if (ch._val !== null && typeof ch._val === 'object') stack.push(ch);
+    });
+  }
+}
+function collapseAll() {
+  treeEl.querySelectorAll('.tnode.open').forEach(n => { n.classList.remove('open'); n.querySelector('.tkids').hidden = true; });
+}
+function updatePaths() {
+  treeEl.querySelectorAll('.tnode').forEach(n => { n.querySelector(':scope > .trow').dataset.path = pathToStr(n._path); });
+}
+/* search */
+function collectMatches(q) {
+  const out = []; const ql = q.toLowerCase();
+  (function walk(v, path) {
+    if (out.length >= 2000) return;
+    if (v !== null && typeof v === 'object') {
+      for (const [k, x] of childEntries(v)) {
+        const p2 = [...path, k];
+        if (String(k).toLowerCase().includes(ql)) out.push(p2);
+        walk(x, p2);
+      }
+    } else if (v !== null && String(v).toLowerCase().includes(ql)) out.push(path);
+  })(S.data, []);
+  return out;
+}
+function rowByPath(pstr) {
+  return [...treeEl.querySelectorAll('.trow')].find(r => r.dataset.path === pstr);
+}
+function navigateTo(path) {
+  for (let i = path.length - 1; i >= 1; i--) {
+    const nd = rowByPath(pathToStr(path.slice(0, i)))?.parentElement;
+    if (nd && !nd.classList.contains('open')) toggleNode(nd);
+  }
+  let pstr = pathToStr(path), row = rowByPath(pstr), guard = 0;
+  while (!row && guard++ < 300) {
+    const more = treeEl.querySelector('.tkids:not([hidden]) .more');
+    if (!more) break;
+    more.click();
+    row = rowByPath(pstr);
+  }
+  if (row) {
+    row.scrollIntoView({ block: 'center' });
+    row.classList.add('hit', 'flash');
+    setTimeout(() => row.classList.remove('flash'), 1300);
+  }
+}
+const qIn = $('#q'), qCount = $('#qCount');
+const runSearch = debounce(() => {
+  S.qQuery = qIn.value.trim().toLowerCase() || null;
+  if (!S.qQuery) { S.qMatches = []; S.qIdx = -1; qCount.textContent = ''; treeEl.querySelectorAll('.trow.hit').forEach(r => r.classList.remove('hit')); return; }
+  S.qMatches = S.data !== undefined ? collectMatches(S.qQuery) : [];
+  S.qIdx = -1;
+  qCount.textContent = S.qMatches.length ? String(S.qMatches.length) : t('qNoMatch');
+  buildTree();
+}, 250);
+qIn.addEventListener('input', runSearch);
+function searchStep(d) {
+  if (!S.qMatches.length) return;
+  S.qIdx = (S.qIdx + d + S.qMatches.length) % S.qMatches.length;
+  qCount.textContent = `${S.qIdx + 1}/${S.qMatches.length}`;
+  navigateTo(S.qMatches[S.qIdx]);
+}
+$('#qPrev').onclick = () => searchStep(-1);
+$('#qNext').onclick = () => searchStep(1);
+
+/* quick actions + row interactions */
+treeEl.addEventListener('click', e => {
+  const qa = e.target.closest('.qa button');
+  if (!qa) return;
+  e.stopPropagation();
+  const row = qa.closest('.trow'), node = row.parentElement;
+  if (qa.dataset.a === 'path') copyText(row.dataset.path);
+  else {
+    const v = node._val;
+    if (v === undefined) return;
+    if (v !== null && typeof v === 'object') {
+      let s; try { s = JSON.stringify(v, null, $('#selIndent').value === 'tab' ? '\t' : +$('#selIndent').value); } catch (err) { s = String(err); }
+      if (s.length > 100000) { s = s.slice(0, 100000) + '\n…'; toast(LANG === 'zh' ? '内容过大，已复制前 100 KB' : 'Copied first 100 KB — content truncated'); }
+      copyText(s);
+    } else copyText(row.querySelector('.tv')?.dataset.full ?? String(v));
+  }
+});
+
+/* ================= formatted view ================= */
+const rawWrap = $('#rawWrap');
+function highlight(json) {
+  const e = json.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const re = /("(?:\\.|[^"\\])*")(\s*:)|("(?:\\.|[^"\\])*")|\b(true|false)\b|(null)|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g;
+  let out = '', last = 0, m;
+  while ((m = re.exec(e))) {
+    out += e.slice(last, m.index);
+    if (m[1] !== undefined) out += `<span class="jv k">${m[1]}</span>${m[2]}`;
+    else if (m[3] !== undefined) out += `<span class="jv s">${m[3]}</span>`;
+    else if (m[4] !== undefined) out += `<span class="jv b">${m[4]}</span>`;
+    else if (m[5] !== undefined) out += `<span class="jv z">${m[5]}</span>`;
+    else out += `<span class="jv n">${m[6]}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + e.slice(last);
+}
+function renderRaw() {
+  if (S.data === undefined) { rawWrap.innerHTML = `<pre style="color:var(--faint)">${escH(t('rawEmpty'))}</pre>`; return; }
+  const indV = $('#selIndent').value;
+  let txt; try { txt = JSON.stringify(S.data, null, indV === 'tab' ? '\t' : +indV); } catch (e) { txt = String(e); }
+  if (txt.length > 500000) { rawWrap.innerHTML = `<pre>${escH(txt.slice(0, 500000))}\n…</pre>`; return; }
+  rawWrap.innerHTML = '<pre>' + highlight(txt) + '</pre>';
+}
+function setView(v) {
+  S.view = v;
+  treeEl.hidden = v !== 'tree';
+  $('#treeBar').hidden = v !== 'tree';
+  rawWrap.hidden = v !== 'raw';
+  $('#tabTree').classList.toggle('on', v === 'tree');
+  $('#tabRaw').classList.toggle('on', v === 'raw');
+  if (v === 'raw') renderRaw();
+}
+$('#tabTree').onclick = () => setView('tree');
+$('#tabRaw').onclick = () => setView('raw');
+
+/* ================= render all ================= */
+function renderAll() {
+  renderStatus();
+  renderBanners();
+  buildTree();
+  if (S.view === 'raw') renderRaw();
+}
+function renderDynamic() { renderStatus(); renderBanners(); if (S.data === undefined) buildTree(); if (S.view === 'raw') renderRaw(); }
+/* ================= JSONPath ================= */
+function jpMatchBracket(s, i) {
+  let depth = 0;
+  for (let j = i; j < s.length; j++) {
+    const c = s[j];
+    if (c === "'" || c === '"') { const q = c; j++; while (j < s.length && s[j] !== q) { if (s[j] === '\\') j++; j++; } continue; }
+    if (c === '[') depth++;
+    else if (c === ']') { depth--; if (!depth) return j; }
+  }
+  return -1;
+}
+function jpResolvePath(v, pexpr) {
+  const re = /\.([\w$]+)|\[([^\]]+)\]/g;
+  let m, cur = v;
+  while ((m = re.exec(pexpr)) !== null) {
+    if (cur == null || typeof cur !== 'object') return undefined;
+    const key = m[1] !== undefined ? m[1] : JSON.parse(m[2].trim().match(/^'.*'$|^".*"$/) ? m[2].trim() : JSON.stringify(m[2].trim()));
+    if (Array.isArray(cur)) {
+      if (key === 'length') { cur = cur.length; continue; }
+      const i = Number(key);
+      cur = Number.isInteger(i) ? cur[i < 0 ? cur.length + i : i] : undefined;
+    } else cur = cur?.[key];
+  }
+  return cur;
+}
+function jpParseLiteral(x) {
+  x = x.trim();
+  if (/^'.*'$|^".*"$/.test(x)) return x.slice(1, -1);
+  if (x === 'true') return true;
+  if (x === 'false') return false;
+  if (x === 'null') return null;
+  const n = Number(x);
+  return isNaN(n) ? x : n;
+}
+function jpCompare(a, op, b) {
+  if (a === undefined) return op === '!=';
+  switch (op) { case '==': return a == b; case '!=': return a != b; case '<': return a < b; case '<=': return a <= b; case '>': return a > b; case '>=': return a >= b; }
+  return false;
+}
+function jpFilterOp(condStr) {
+  const conds = condStr.split(/&&|&/).map(c => c.trim()).filter(Boolean);
+  return v => conds.every(cond => {
+    const m = /^@\s*((?:\.[\w$]+|\[[^\]]+\])*)\s*(==|!=|<=|>=|<|>)?\s*(.*)$/.exec(cond);
+    if (!m) return false;
+    const actual = m[1] ? jpResolvePath(v, m[1]) : v;
+    if (!m[2]) return m[3] ? jpCompare(actual, '==', jpParseLiteral(m[3])) : !!actual;
+    return jpCompare(actual, m[2], jpParseLiteral(m[3]));
+  });
+}
+function jpBracketOp(inner) {
+  if (inner === '*') return it => {
+    const out = [];
+    if (it.v !== null && typeof it.v === 'object') for (const [k, x] of childEntries(it.v)) out.push({ path: [...it.path, k], v: x });
+    return out;
+  };
+  if (inner.startsWith('?')) { const f = jpFilterOp(inner.slice(1).replace(/^\((.*)\)$/, '$1')); return it => {
+    const v = it.v;
+    if (v === null || typeof v !== 'object') return f(v) ? [{ path: [...it.path], v }] : [];
+    const out = [];
+    for (const [k, x] of childEntries(v)) { if (f(x)) out.push({ path: [...it.path, k], v: x }); }
+    return out;
+  }; }
+  const qm = /^(['"])([\s\S]*)\1$/.exec(inner);
+  if (qm) { const name = qm[2]; return it => (it.v != null && typeof it.v === 'object' && !Array.isArray(it.v) && name in it.v) ? [{ path: [...it.path, name], v: it.v[name] }] : []; }
+  if (inner.includes(':')) {
+    const parts = inner.split(':').map(p => p.trim() === '' ? null : Number(p));
+    return it => {
+      const v = it.v; if (!Array.isArray(v)) return [];
+      const len = v.length, step = parts[2] == null ? 1 : parts[2];
+      if (!step) return [];
+      let a = parts[0] == null ? (step > 0 ? 0 : len - 1) : (parts[0] < 0 ? Math.max(len + parts[0], 0) : Math.min(parts[0], len));
+      let b = parts[1] == null ? (step > 0 ? len : -1) : (parts[1] < 0 ? Math.max(len + parts[1], 0) : Math.min(parts[1], len));
+      const out = [];
+      for (let i = a; step > 0 ? i < b : i > b; i += step) if (i >= 0 && i < len) out.push({ path: [...it.path, i], v: v[i] });
+      return out;
+    };
+  }
+  if (inner.includes(',')) {
+    const idxs = inner.split(',').map(x => Number(x.trim()));
+    return it => {
+      const v = it.v; if (!Array.isArray(v)) return [];
+      return idxs.filter(i => i >= 0 ? i < v.length : v.length + i >= 0).map(i => ({ path: [...it.path, i < 0 ? v.length + i : i], v: v[i < 0 ? v.length + i : i] }));
+    };
+  }
+  if (!isNaN(Number(inner))) {
+    const i0 = Number(inner);
+    return it => {
+      const v = it.v;
+      if (Array.isArray(v)) { const i = i0 < 0 ? v.length + i0 : i0; return (i >= 0 && i < v.length) ? [{ path: [...it.path, i], v: v[i] }] : []; }
+      return [];
+    };
+  }
+  return jpBracketOp(`'${inner}'`);
+}
+function jpNameOp(name) { return it => (it.v != null && typeof it.v === 'object' && !Array.isArray(it.v) && name in it.v) ? [{ path: [...it.path, name], v: it.v[name] }] : []; }
+function jpAllNodes(startItem) {
+  const out = [startItem];
+  (function walk(item) {
+    const v = item.v;
+    if (v === null || typeof v !== 'object') return;
+    for (const [k, x] of childEntries(v)) { const it2 = { path: [...item.path, k], v: x }; out.push(it2); walk(it2); }
+  })(startItem);
+  return out;
+}
+function jpParse(expr) {
+  const ops = [];
+  let i = 0; const s = expr.trim();
+  if (s[0] === '$') i = 1;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === '[') { const end = jpMatchBracket(s, i); if (end < 0) throw new Error('bracket'); ops.push(jpBracketOp(s.slice(i + 1, end).trim())); i = end + 1; continue; }
+    if (c === '.') {
+      if (s[i + 1] === '.') {
+        i += 2;
+        let op;
+        if (s[i] === '[') { const end = jpMatchBracket(s, i); if (end < 0) throw new Error('bracket'); op = jpBracketOp(s.slice(i + 1, end).trim()); i = end + 1; }
+        else { let j = i; while (j < s.length && /[\w$]/.test(s[j])) j++; const nm = s.slice(i, j); i = j; if (!nm) throw new Error('name'); op = nm === '*' ? jpBracketOp('*') : jpNameOp(nm); }
+        const inner = op;
+        ops.push(it => jpAllNodes(it).flatMap(inner));
+        continue;
+      }
+      i++;
+      if (s[i] === '*') { ops.push(jpBracketOp('*')); i++; continue; }
+      let j = i; while (j < s.length && /[\w$]/.test(s[j])) j++;
+      if (j === i) throw new Error('name');
+      ops.push(jpNameOp(s.slice(i, j))); i = j; continue;
+    }
+    throw new Error('char: ' + c);
+  }
+  return ops;
+}
+const jpPanel = $('#jpPanel'), jpIn = $('#jp');
+function jpPreviewText(v) {
+  if (v === null) return 'null';
+  if (Array.isArray(v)) return `Array(${v.length})`;
+  if (typeof v === 'object') return `{${fmtNum(Object.keys(v).length)} keys}`;
+  if (typeof v === 'string') return JSON.stringify(v.length > 80 ? v.slice(0, 80) + '…' : v);
+  return String(v);
+}
+function runJp() {
+  const expr = jpIn.value.trim();
+  $('#jpCopy').hidden = true;
+  if (!expr || S.data === undefined) { jpPanel.hidden = true; $('#jpCount').textContent = ''; return; }
+  let res;
+  try {
+    const ops = jpParse(expr);
+    res = [{ path: [], v: S.data }];
+    for (const op of ops) { const next = []; for (const it of res) next.push(...op(it)); res = next; }
+  } catch (e) {
+    $('#jpCount').textContent = LANG === 'zh' ? '语法错误' : 'syntax error';
+    jpPanel.innerHTML = `<div style="color:var(--err);padding:4px 6px;font-family:var(--sans)">${escH(LANG === 'zh' ? 'JSONPath 无法解析 — 参考 $..key · $.a[0] · [?(@.x==1)]' : 'Cannot parse JSONPath — try $..key · $.a[0] · [?(@.x==1)]')}</div>`;
+    jpPanel.hidden = false;
+    S.jpResults = null;
+    return;
+  }
+  S.jpResults = res;
+  $('#jpCount').textContent = res.length ? String(res.length) : t('jpNoRes');
+  if (!res.length) { jpPanel.hidden = true; return; }
+  $('#jpCopy').hidden = false;
+  jpPanel.innerHTML = res.slice(0, 100).map((r, i) =>
+    `<div class="jrow" data-i="${i}"><span class="jpath">${escH(pathToStr(r.path))}</span><span class="jval">${escH(jpPreviewText(r.v))}</span></div>`
+  ).join('') + (res.length > 100 ? `<div class="jrow" style="cursor:default"><span class="jval">… +${fmtNum(res.length - 100)}</span></div>` : '');
+  jpPanel.hidden = false;
+}
+jpIn.addEventListener('input', debounce(runJp, 300));
+jpIn.addEventListener('keydown', e => { if (e.key === 'Enter') runJp(); });
+jpPanel.addEventListener('click', e => {
+  const row = e.target.closest('.jrow[data-i]');
+  if (!row || !S.jpResults) return;
+  navigateTo(S.jpResults[+row.dataset.i].path);
+});
+$('#jpRun').onclick = () => runJp();
+$('#jpCopy').onclick = () => {
+  if (!S.jpResults?.length) return;
+  const ind = $('#selIndent').value === 'tab' ? '\t' : +$('#selIndent').value;
+  let s; try { s = JSON.stringify(S.jpResults.map(r => r.v), null, ind); } catch (e) { s = String(e); }
+  if (s.length > 200000) { s = s.slice(0, 200000) + '\n…'; }
+  copyText(s);
+};
+
+/* ================= toolbar actions ================= */
+const selIndent = $('#selIndent');
+selIndent.addEventListener('change', () => {
+  inEl.style.tabSize = selIndent.value === 'tab' ? '4' : selIndent.value;
+  if (S.view === 'raw') renderRaw();
+});
+function indentVal() { return selIndent.value === 'tab' ? '\t' : +selIndent.value; }
+function stringifyBest() {
+  if (S.data !== undefined) return JSON.stringify(S.data, null, indentVal());
+  if (S.finalText) { try { return JSON.stringify(JSON.parse(S.finalText), null, indentVal()); } catch (e) {} }
+  return null;
+}
+function doFormat() {
+  const s = stringifyBest();
+  if (s === null) { toast(LANG === 'zh' ? '无法格式化 — 先修正 JSON 或开启自动修复' : 'Cannot format — fix the JSON or enable auto-repair'); return; }
+  inEl.value = s; onInputNow();
+}
+function doMinify() {
+  let s = null;
+  if (S.data !== undefined) s = JSON.stringify(S.data);
+  else if (S.finalText) { try { s = JSON.stringify(JSON.parse(S.finalText)); } catch (e) {} }
+  if (s === null) { toast(LANG === 'zh' ? '无法压缩 — 先修正 JSON' : 'Cannot minify — fix the JSON first'); return; }
+  inEl.value = s; onInputNow();
+}
+function doUnescape() {
+  const u = unescapeLoop(inEl.value);
+  if (!u) { toast(LANG === 'zh' ? '未检测到可去除的转义层' : 'No escaped string detected'); return; }
+  inEl.value = u.text; onInputNow();
+  toast((LANG === 'zh' ? `已剥离 ${u.layers} 层转义（` : `Removed ${u.layers} escape layer(s) (`) + u.hows.map(howLabel).join(', ') + ')');
+}
+function doEscape() {
+  const raw = inEl.value;
+  if (!raw) return;
+  const src = S.data !== undefined ? JSON.stringify(S.data) : raw;
+  inEl.value = JSON.stringify(src); onInputNow();
+}
+$('#btnFormat').onclick = doFormat;
+$('#btnMinify').onclick = doMinify;
+$('#btnUnescape').onclick = doUnescape;
+$('#btnEscape').onclick = doEscape;
+$('#btnExpAll').onclick = () => expandTo(99);
+$('#btnColAll').onclick = () => collapseAll();
+$('#selExpand').addEventListener('change', () => { if (S.data !== undefined) expandTo(curExpandDepth()); });
+$('#selPath').addEventListener('change', updatePaths);
+$('#btnClear').onclick = () => { inEl.value = ''; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} onInputNow(); inEl.focus(); };
+$('#btnPaste').onclick = async () => {
+  try { const txt = await navigator.clipboard.readText(); if (txt) { inEl.value = txt; onInputNow(); } }
+  catch (e) { toast(t('pasteFail')); }
+};
+$('#btnOpen').onclick = () => $('#fileIn').click();
+$('#fileIn').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 20 * 1048576) { toast(t('fileBig')); e.target.value = ''; return; }
+  const r = new FileReader();
+  r.onload = () => { inEl.value = String(r.result); onInputNow(); };
+  r.onerror = () => toast(t('loadErr'));
+  r.readAsText(f);
+  e.target.value = '';
+});
+const SAMPLE_OBJ = {
+  service: 'json-lens-demo', version: '1.0.0',
+  user: {
+    id: 1001, name: '张伟', email: 'zhangwei@example.com', vip: true, balance: 128.5, tags: ['beta', 'pro'],
+    address: { country: 'CN', city: '上海', zip: null, geo: { lat: 31.2304, lng: 121.4737 } },
+  },
+  orders: [
+    { id: 'A-1024', total: 299.0, currency: 'CNY', status: 'paid', paidAt: '2026-09-21T08:30:00Z', coupon: null, items: [{ sku: 'JL-01', qty: 2, price: 99.5 }, { sku: 'JL-99', qty: 1, price: 100 }] },
+    { id: 'A-1025', total: 0, currency: 'CNY', status: 'draft', paidAt: null, coupon: 'WELCOME', items: [] },
+  ],
+  metrics: { requests: 1024, errors: null, uptime: 0.9995, ratio: 3 / 4 },
+  description: '转义示例: "quoted \\"text\\"" and a newline: \\n ← literal backslash-n, unicode: 中 ✓',
+  empty_object: {},
+  empty_array: [],
+};
+const SAMPLE = JSON.stringify(SAMPLE_OBJ, null, 2);
+$('#btnSample').onclick = () => { inEl.value = SAMPLE; onInputNow(); };
+$('#btnDownload').onclick = () => {
+  const s = S.data !== undefined ? JSON.stringify(S.data, null, indentVal()) : inEl.value;
+  download('data.json', s);
+};
+$('#in').addEventListener('change', () => {});
+/* drag & drop */
+const paneIn = $('#paneIn');
+['dragover', 'dragenter'].forEach(ev => paneIn.addEventListener(ev, e => { e.preventDefault(); inEl.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(ev => paneIn.addEventListener(ev, e => { e.preventDefault(); inEl.classList.remove('dragover'); }));
+paneIn.addEventListener('drop', e => {
+  const f = e.dataTransfer?.files?.[0];
+  if (!f) return;
+  if (f.size > 20 * 1048576) { toast(t('fileBig')); return; }
+  const r = new FileReader();
+  r.onload = () => { inEl.value = String(r.result); onInputNow(); };
+  r.readAsText(f);
+});
+
+/* ================= share ================= */
+function b64urlFromBytes(buf) {
+  let bin = '';
+  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function bytesFromB64url(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s);
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+$('#btnShare').onclick = async () => {
+  if (!inEl.value.trim()) return;
+  let url;
+  try {
+    if ('CompressionStream' in window) {
+      const cs = new CompressionStream('deflate-raw');
+      const st = new Blob([new TextEncoder().encode(inEl.value)]).stream().pipeThrough(cs);
+      const buf = new Uint8Array(await new Response(st).arrayBuffer());
+      url = location.origin + location.pathname + '#j=z' + b64urlFromBytes(buf);
+    } else throw 0;
+  } catch (e) {
+    try { url = location.origin + location.pathname + '#j=b' + b64urlFromBytes(new TextEncoder().encode(inEl.value)); }
+    catch (e2) { toast(t('shareErr')); return; }
+  }
+  if (url.length > 208000) { toast(t('shareBig')); return; }
+  copyText(url, t('shareOk'));
+};
+async function importHash() {
+  if (!location.hash.startsWith('#j=')) return false;
+  const payload = location.hash.slice(3);
+  const mode = payload[0], b64 = payload.slice(1);
+  const bytes = bytesFromB64url(b64);
+  let text;
+  if (mode === 'z') { const ds = new DecompressionStream('deflate-raw'); text = await new Response(bytes.stream().pipeThrough(ds)).text(); }
+  else text = new TextDecoder().decode(bytes);
+  inEl.value = text;
+  return true;
+}
+
+/* ================= mobile tabs ================= */
+const panes = $('#panes');
+$('#mobIn').onclick = () => { panes.classList.remove('show-right'); $('#mobIn').classList.add('on'); $('#mobOut').classList.remove('on'); };
+$('#mobOut').onclick = () => { panes.classList.add('show-right'); $('#mobOut').classList.add('on'); $('#mobIn').classList.remove('on'); };
+
+/* ================= boot ================= */
+function boot() {
+  applyTheme();
+  $('#year').textContent = new Date().getFullYear();
+  const usp = new URLSearchParams(location.search);
+  const pl = usp.get('lang');
+  const saved = localStorage.getItem(LANG_KEY);
+  const init = (pl === 'zh' || pl === 'en') ? pl
+    : (saved === 'zh' || saved === 'en') ? saved
+    : (navigator.language || 'en').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+  setLang(init);
+  syncGutter();
+  (async () => {
+    let loaded = false;
+    try { loaded = await importHash(); } catch (e) { loaded = false; }
+    if (!loaded) {
+      let d = null;
+      try { d = localStorage.getItem(DRAFT_KEY); } catch (e) {}
+      inEl.value = d != null ? d : SAMPLE;
+    }
+    S.bigMode = inEl.value.length > 2000000;
+    parseNow();
+  })();
+}
+boot();
+</script>
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6a164def7d63477cba60148b8417ca95"}'></script>
+</body>
+</html>
