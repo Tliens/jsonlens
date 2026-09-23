@@ -163,8 +163,8 @@ select.mini{background:var(--panel);border:1px solid var(--border);border-radius
 .tmeta{color:var(--faint);font-size:11px;margin-left:8px}
 .tprev{color:var(--faint);font-size:11.5px;margin-left:8px;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
 .tkids{margin-left:17px;border-left:1px dotted var(--border);padding-left:6px}
-.qa{display:none;align-items:center;gap:2px;margin-left:8px;vertical-align:middle}
-.trow:hover .qa{display:inline-flex}
+.qa{display:inline-flex;align-items:center;gap:2px;margin-left:8px;vertical-align:middle;opacity:.45;transition:opacity .12s}
+.trow:hover .qa{opacity:1}
 .qa button{background:none;border:none;color:var(--faint);font-size:10.5px;padding:1px 5px;border-radius:5px;border:1px solid transparent}
 .qa button:hover{color:var(--accent-text);background:var(--panel);border-color:var(--border)}
 
@@ -326,7 +326,7 @@ footer .frow{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
           <button class="iconbtn" id="jpCopy" data-i18n="copy" title="Copy results as JSON" hidden>⧉</button>
         </div>
         <select class="mini" id="selExpand" title="Expand depth">
-          <option value="1">L1</option><option value="2" selected>L2</option><option value="3">L3</option><option value="4">L4</option><option value="5">L5</option><option value="99" data-i18n="expAll">All</option>
+          <option value="1" selected>L1</option><option value="2">L2</option><option value="3">L3</option><option value="4">L4</option><option value="5">L5</option><option value="99" data-i18n="expAll">All</option>
         </select>
         <select class="mini" id="selPath" title="Path style for copy">
           <option value="jp" selected>$.a[0]</option><option value="js">a.b[0]</option><option value="py">['a'][0]</option>
@@ -1244,7 +1244,7 @@ function buildNode(key, val, path, depth) {
     const kids = document.createElement('div');
     kids.className = 'tkids'; kids.hidden = true;
     node.appendChild(kids);
-    if (open) fillKids(node);
+    if (open) { fillKids(node); node.classList.add('open'); }
     row.querySelector('.tw').addEventListener('click', ev => { ev.stopPropagation(); toggleNode(node); });
     row.querySelector('.tprev')?.addEventListener('click', ev => { ev.stopPropagation(); toggleNode(node); });
   }
@@ -1772,6 +1772,7 @@ function boot() {
       inEl.value = d != null ? d : SAMPLE;
     }
     S.bigMode = inEl.value.length > 2000000;
+    syncGutter();
     parseNow();
   })();
 }
