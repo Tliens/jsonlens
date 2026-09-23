@@ -1222,10 +1222,12 @@ function buildNode(key, val, path, depth) {
   if (selfHit) row.classList.add('hit');
   let html = '';
   if (key !== null) html += `<span class="tk">${escH(JSON.stringify(key))}</span><span class="tp">: </span>`;
+  let open = false;
   if (isC) {
     const isArr = Array.isArray(val);
     const n = isArr ? val.length : Object.keys(val).length;
-    const open = depth < curExpandDepth() && n > 0 && n <= 2000;    html += `<span class="tw" role="button" aria-label="toggle">▶</span><span class="tp">${isArr ? '[' : '{'}</span>`;
+    open = depth < curExpandDepth() && n > 0 && n <= 2000;
+    html += `<span class="tw" role="button" aria-label="toggle">▶</span><span class="tp">${isArr ? '[' : '{'}</span>`;
     if (!open && n > 0) html += `<span class="tprev">${escH(previewList(val))}${n > 3 ? ', …' : ''}</span><span class="tp">…${isArr ? ']' : '}'}</span>`;
     else html += `<span class="tp">${isArr ? ']' : '}'}</span>`;
     html += `<span class="tmeta">${isArr ? fmtNum(n) + (LANG === 'zh' ? ' 项' : ' items') : fmtNum(n) + (LANG === 'zh' ? ' 个键' : ' keys')}</span>`;
