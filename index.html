@@ -5,26 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>JSON Lens — Online JSON Formatter, Validator &amp; Tree Viewer | Unescape, JSONPath</title>
 <meta name="description" content="Free online JSON formatter & validator for developers. Format, minify, auto-repair, unescape JSON strings, collapse/expand tree view, error position locator and JSONPath queries — 100% in your browser, nothing uploaded.">
-<link rel="canonical" href="https://tliens.github.io/jsonlens/">
-<link rel="alternate" hreflang="en" href="https://tliens.github.io/jsonlens/?lang=en">
-<link rel="alternate" hreflang="zh" href="https://tliens.github.io/jsonlens/?lang=zh">
-<link rel="alternate" hreflang="x-default" href="https://tliens.github.io/jsonlens/">
+<link rel="canonical" href="https://jsonlens.kuige.me/">
+<link rel="alternate" hreflang="en" href="https://jsonlens.kuige.me/?lang=en">
+<link rel="alternate" hreflang="zh" href="https://jsonlens.kuige.me/?lang=zh">
+<link rel="alternate" hreflang="x-default" href="https://jsonlens.kuige.me/">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="JSON Lens">
 <meta property="og:title" content="JSON Lens — Online JSON Formatter, Validator & Tree Viewer">
 <meta property="og:description" content="Format, repair, unescape and explore JSON in a collapsible tree. Error locator, JSONPath queries. 100% local — your data never leaves the browser.">
-<meta property="og:url" content="https://tliens.github.io/jsonlens/">
-<meta property="og:image" content="https://tliens.github.io/jsonlens/og-image.png">
+<meta property="og:url" content="https://jsonlens.kuige.me/">
+<meta property="og:image" content="https://jsonlens.kuige.me/og-image.png">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="JSON Lens — Online JSON Formatter, Validator & Tree Viewer">
 <meta name="twitter:description" content="Format, repair, unescape and explore JSON in a collapsible tree. JSONPath queries, error locator. 100% local.">
-<meta name="twitter:image" content="https://tliens.github.io/jsonlens/og-image.png">
+<meta name="twitter:image" content="https://jsonlens.kuige.me/og-image.png">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"WebApplication","name":"JSON Lens","url":"https://tliens.github.io/jsonlens/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"inLanguage":["en","zh-CN"],"description":"Free online JSON formatter, validator and tree viewer with auto-repair, escape/unescape, JSONPath queries and precise error locations. Runs entirely in the browser."},
+ {"@type":"WebApplication","name":"JSON Lens","url":"https://jsonlens.kuige.me/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"inLanguage":["en","zh-CN"],"description":"Free online JSON formatter, validator and tree viewer with auto-repair, escape/unescape, JSONPath queries and precise error locations. Runs entirely in the browser."},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is my JSON data uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. All parsing, formatting, repair and querying happens locally in your browser with JavaScript. Your input never leaves your device — there is no backend at all."}},
   {"@type":"Question","name":"How do I convert an escaped JSON string back to JSON?","acceptedAnswer":{"@type":"Answer","text":"Paste the escaped string and JSON Lens auto-detects it. You can also press the Unescape button. It strips wrapping quotes, resolves \\n, \\\" and \\\\ sequences, and handles multi-layer escaping, URL-encoded and Base64-encoded JSON."}},
@@ -163,10 +163,9 @@ select.mini{background:var(--panel);border:1px solid var(--border);border-radius
 .tmeta{color:var(--faint);font-size:11px;margin-left:8px}
 .tprev{color:var(--faint);font-size:11.5px;margin-left:8px;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
 .tkids{margin-left:17px;border-left:1px dotted var(--border);padding-left:6px}
-.qa{display:inline-flex;align-items:center;gap:2px;margin-left:8px;vertical-align:middle;opacity:.45;transition:opacity .12s}
-.trow:hover .qa{opacity:1}
-.qa button{background:none;border:none;color:var(--faint);font-size:10.5px;padding:1px 5px;border-radius:5px;border:1px solid transparent}
-.qa button:hover{color:var(--accent-text);background:var(--panel);border-color:var(--border)}
+.qa{display:inline-flex;align-items:center;gap:4px;margin-left:8px;vertical-align:middle}
+.qa button{background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:5px;cursor:pointer;transition:color .12s,border-color .12s,background .12s}
+.qa button:hover{color:var(--accent-text);background:var(--accent-soft);border-color:var(--accent-text)}
 
 .rawwrap{flex:1;overflow:auto;padding:12px 14px;min-height:340px}
 .rawwrap pre{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.65;white-space:pre-wrap;word-break:break-all}
@@ -327,7 +326,7 @@ footer .frow{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
           <button class="iconbtn" id="jpCopy" data-i18n="copy" title="Copy results as JSON" hidden>⧉</button>
         </div>
         <select class="mini" id="selExpand" title="Expand depth">
-          <option value="1" selected>L1</option><option value="2">L2</option><option value="3">L3</option><option value="4">L4</option><option value="5">L5</option><option value="99" data-i18n="expAll">All</option>
+          <option value="1">L1</option><option value="2">L2</option><option value="3">L3</option><option value="4">L4</option><option value="5">L5</option><option value="99" data-i18n="expAll" selected>All</option>
         </select>
         <select class="mini" id="selPath" title="Path style for copy">
           <option value="jp" selected>$.a[0]</option><option value="js">a.b[0]</option><option value="py">['a'][0]</option>
@@ -470,11 +469,11 @@ $.items[?(@.qty &gt;= 2 &amp; @.id != 9)]</pre>
     <span>·</span>
     <a href="https://github.com/Tliens/jsonlens" target="_blank" rel="noopener">GitHub</a>
     <span>·</span>
-    <a href="https://tliens.github.io/sse-inspector/" target="_blank" rel="noopener" data-i18n="footSse">SSE Inspector — online SSE debugging tool</a>
+    <a href="https://sse-inspector.kuige.me/" target="_blank" rel="noopener" data-i18n="footSse">SSE Inspector — online SSE debugging tool</a>
     <span>·</span>
     <a href="https://x.com/shi_kui8457" target="_blank" rel="noopener">X (Twitter)</a>
     <span>·</span>
-    <a href="https://tliens.github.io/" target="_blank" rel="noopener">更多作品</a>
+    <a href="https://kuige.me/" target="_blank" rel="noopener">更多作品</a>
   </div>
   <div style="margin-top:8px">JSON Lens · free online JSON formatter &amp; viewer · <span id="year">2026</span></div>
 </footer>
@@ -1189,6 +1188,7 @@ $('#btnParseBig').onclick = () => parseNow();
 const treeEl = $('#tree');
 const CHUNK = 1000;
 const curExpandDepth = () => +$('#selExpand').value;
+const effExpandDepth = () => (curExpandDepth() >= 99 && S.stats && S.stats.nodes > 30000) ? 3 : curExpandDepth();
 function pathToStr(path) {
   if (!path.length) return '$';
   const style = $('#selPath').value;
@@ -1231,7 +1231,7 @@ function buildNode(key, val, path, depth) {
   if (isC) {
     const isArr = Array.isArray(val);
     const n = isArr ? val.length : Object.keys(val).length;
-    open = depth < curExpandDepth() && n > 0 && n <= 2000;
+    open = depth < effExpandDepth() && n > 0 && n <= 2000;
     html += `<span class="tw" role="button" aria-label="toggle">▶</span><span class="tp">${isArr ? '[' : '{'}</span>`;
     if (!open && n > 0) html += `<span class="tprev">${escH(previewList(val))}${n > 3 ? ', …' : ''}</span><span class="tp">…${isArr ? ']' : '}'}</span>`;
     else html += `<span class="tp">${isArr ? ']' : '}'}</span>`;
@@ -1245,7 +1245,7 @@ function buildNode(key, val, path, depth) {
   row.innerHTML = html;
   const qa = document.createElement('span');
   qa.className = 'qa';
-  qa.innerHTML = `<button data-a="path" title="${escH(t('copyPathT'))}">path</button><button data-a="val" title="${escH(t('copyValT'))}">val</button>`;
+  qa.innerHTML = `<button data-a="path" title="${escH(t('copyPathT'))}">⧉ path</button><button data-a="val" title="${escH(t('copyValT'))}">⧉ val</button>`;
   row.appendChild(qa);
   if (isC) {
     const kids = document.createElement('div');
@@ -1299,6 +1299,7 @@ function buildTree() {
     return;
   }
   treeEl.appendChild(buildNode(null, S.data, [], 1));
+  if (curExpandDepth() >= 99 && effExpandDepth() < 99) toast(t('expWarn'));
   if (S.bigMode && S.stats && S.stats.nodes > 200000) toast(t('parseBig'));
 }
 function expandTo(level) {
