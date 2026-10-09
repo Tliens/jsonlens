@@ -9,7 +9,8 @@
 <link rel="alternate" hreflang="en" href="https://jsonlens.kuige.me/?lang=en">
 <link rel="alternate" hreflang="zh" href="https://jsonlens.kuige.me/?lang=zh">
 <link rel="alternate" hreflang="x-default" href="https://jsonlens.kuige.me/">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="favicon.png?v=2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="JSON Lens JSON 智能格式化">
 <meta property="og:title" content="JSON Lens — Online JSON Formatter, Validator & Tree Viewer">
@@ -221,22 +222,45 @@ footer .frow{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:9px;font-size:13px;box-shadow:var(--shadow);z-index:99;max-width:80vw}
 [hidden]{display:none !important}
+/* ── KuiGe 站群统一基座 ───────────────────── */
+:root{--kg-ink:#1f2430;--kg-sub:#6b7280;--kg-accent:#f2603c;--kg-line:#e8e6e1;--kg-bg:#faf9f7}
+.kg-top{position:sticky;top:0;z-index:60;background:rgba(250,249,247,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--kg-line)}
+.kg-top-in{max-width:1120px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.kg-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--kg-ink);font-weight:700;font-size:17px}
+.kg-brand img{width:32px;height:32px;border-radius:9px;display:block}
+.kg-brand small{font-weight:500;color:var(--kg-sub);font-size:12px}
+.kg-nav{display:flex;align-items:center;gap:14px;font-size:14px}
+.kg-nav a{color:var(--kg-sub);text-decoration:none}
+.kg-nav a:hover{color:var(--kg-ink)}
+.kg-entry{background:var(--kg-ink);color:#fff!important;padding:6px 14px;border-radius:999px;text-decoration:none;font-size:13px}
+.kg-entry:hover{background:var(--kg-accent)}
+.kg-foot{background:var(--kg-bg);border-top:1px solid var(--kg-line);color:var(--kg-sub);font-size:13px;margin-top:0}
+.kg-foot-in{max-width:1120px;margin:0 auto;padding:36px 20px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.kg-foot img{width:44px;height:44px;border-radius:12px;margin-bottom:2px}
+.kg-foot-brand{color:var(--kg-ink);font-weight:700;font-size:15px;margin:0}
+.kg-foot-links{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px}
+.kg-foot-links a{color:var(--kg-sub);text-decoration:none}
+.kg-foot-links a:hover{color:var(--kg-accent)}
+.kg-foot-copy{margin:4px 0 0;color:#9ca3af;font-size:12px}
+@media(max-width:640px){.kg-nav a:not(.kg-entry){display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<header class="top">
-  <div class="brand">
-    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="6" fill="var(--accent)"/><path d="M8 7.5c-1.5 0-2 .8-2 2v1.6c0 .9-.4 1.5-1.5 1.9 1.1.4 1.5 1 1.5 1.9v1.6c0 1.2.5 2 2 2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M18 7.5c1.5 0 2 .8 2 2v1.6c0 .9.4 1.5 1.5 1.9-1.1.4-1.5 1-1.5 1.9v1.6c0 1.2-.5 2-2 2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><circle cx="13" cy="13" r="1.6" fill="#fff"/></svg>
-    <b>JSON Lens</b>
-    <span class="tag" data-i18n="tagline">Free online JSON toolkit</span>
+<header class="kg-top">
+  <div class="kg-top-in">
+    <a class="kg-brand" href="./">
+      <img src="favicon.png?v=2" alt="JSON Lens 吉祥物">
+      <span>JSON Lens<small data-i18n="tagline">Free online JSON toolkit</small></span>
+    </a>
+    <nav class="kg-nav">
+      <button id="btnLang" class="ghost">中文</button>
+      <button id="btnTheme" class="ghost" title="Theme">◐</button>
+      <a class="ghost" href="https://x.com/kuige_me" target="_blank" rel="noopener" title="Follow on X (Twitter)">X ↗</a>
+      <a class="kg-entry" href="https://kuige.me/" target="_blank" rel="noopener">魁歌 · 全部作品</a>
+    </nav>
   </div>
-  <div class="grow"></div>
-  <a class="ghost kuige-entry" href="https://kuige.me/" target="_blank" rel="noopener" title="kuige.me"><img src="https://kuige.me/logo.png" alt="" width="16" height="16" style="width:16px;height:16px;border-radius:50%;vertical-align:-3px;margin-right:6px">魁歌</a>
-<button id="btnLang" class="ghost">中文</button>
-  <button id="btnTheme" class="ghost" title="Theme">◐</button>
-  <a class="ghost" href="https://x.com/kuige_me" target="_blank" rel="noopener" title="Follow on X (Twitter)">X ↗</a>
 </header>
 
 <section class="hero">
@@ -463,16 +487,21 @@ $.items[?(@.qty &gt;= 2 &amp; @.id != 9)]</pre>
   <div class="fitem"><b data-i18n="fq5">Is there a size limit?</b><p data-i18n="fq5a">There is no hard limit. Inputs up to a few MB parse instantly; above 2 MB live parsing switches to a manual Parse button to keep the page responsive, and the tree lazily renders nodes only when you expand them.</p></div>
 </section>
 
-<footer>
-  <div class="frow">
-    <span data-i18n="footPrivacy">🔒 100% client-side — your JSON never leaves your browser.</span>
-
-    <span>·</span>
-    <a href="https://sse-inspector.kuige.me/" target="_blank" rel="noopener" data-i18n="footSse">SSE Inspector — online SSE debugging tool</a>
-    <span>·</span>
-    <a href="https://x.com/kuige_me" target="_blank" rel="noopener">X (Twitter)</a>
+<footer class="kg-foot">
+  <div class="kg-foot-in">
+    <img src="favicon.png?v=2" alt="JSON Lens 吉祥物">
+    <p class="kg-foot-brand">JSON Lens</p>
+    <nav class="kg-foot-links">
+      <a href="https://kuige.me/" target="_blank" rel="noopener">魁歌主页</a>
+      <a href="https://icongems.kuige.me/" target="_blank" rel="noopener">IconGems</a>
+      <a href="https://tokenlens.kuige.me/" target="_blank" rel="noopener">TokenLens 词元工坊</a>
+      <a href="https://ai-model-rank.kuige.me/" target="_blank" rel="noopener">AI Rank</a>
+      <a href="https://sse-inspector.kuige.me/" target="_blank" rel="noopener" data-i18n="footSse">SSE Inspector — online SSE debugging tool</a>
+      <a href="https://x.com/kuige_me" target="_blank" rel="noopener">X (Twitter)</a>
+    </nav>
+    <div data-i18n="footPrivacy">🔒 100% client-side — your JSON never leaves your browser.</div>
+    <p class="kg-foot-copy">© <span id="year">2026</span> 魁歌 KuiGe · 用 AI 构建 · <a href="https://kuige.me/" style="color:inherit">kuige.me</a></p>
   </div>
-  <div style="margin-top:8px">JSON Lens · free online JSON formatter &amp; viewer · <span id="year">2026</span></div>
 </footer>
 
 </div>
